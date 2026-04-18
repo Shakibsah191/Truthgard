@@ -1,0 +1,208 @@
+const Analysis = require('../models/Analysis');
+const axios = require('axios');
+const Groq = require('groq-sdk');
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// ============================================================
+// 🌍 REALITY ANCHOR
+// ============================================================
+
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
+
+const REALITY_ANCHOR = `
+You are a senior Bangladeshi fact-checker. Today's date is ${formattedDate}.
+
+CONFIRMED CURRENT FACTS:
+- Bangladesh PM: Tarique Rahman (2025–present)
+- Sheikh Hasina: NOT in power
+- Awami League: NOT in government
+
+Return JSON only.
+`.trim();
+
+// ============================================================
+// 📦 CATEGORY DEFINITIONS
+// ============================================================
+
+const CATEGORIES = {
+  POLITICS: { name: 'Politics', emoji: '🏛️' },
+  HEALTH: { name: 'Health', emoji: '🏥' },
+  SPORTS: { name: 'Sports', emoji: '⚽' },
+  ECONOMY: { name: 'Economy', emoji: '💰' },
+  WORLD: { name: 'World', emoji: '🌍' },
+  GENERAL: { name: 'General', emoji: '📰' },
+};
+
+// ============================================================
+// 🧮 UPDATED SCORING (NO ML)
+// ============================================================
+
+const calculateScore = ({ webMatchResult, categoryPenalty, domainBonus }) => {
+  let score = 50;
+
+  if (webMatchResult === 'YES') score += 40;
+  else if (webMatchResult === 'PARTIAL') score += 10;
+  else if (webMatchResult === 'NO') score -= 30;
+
+  score -= categoryPenalty;
+  score += domainBonus;
+
+  return Math.round(Math.max(0, Math.min(100, score)));
+};
+
+const scoreToVerdict = (score) => {
+  if (score >= 75) return 'REAL';
+  if (score >= 55) return 'LIKELY REAL';
+  if (score >= 35) return 'SUSPICIOUS';
+  return 'FAKE';
+};
+
+// ============================================================
+// 🏷️ CATEGORY DETECTION
+// ============================================================
+
+const detectCategory = async (text) => {
+  const res = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages: [
+      { role: 'system', content: REALITY_ANCHOR },
+      { role: 'user', content: `Classify category: ${text.substring(0, 500)}` }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0,
+  });
+
+  const parsed = JSON.parse(res.choices[0].message.content);
+  return parsed.category || 'GENERAL';
+};
+
+// ============================================================
+// 🔎 CLAIM EXTRACTION
+// ============================================================
+
+const extractClaims = async (text) => {
+  const res = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages: [
+      { role: 'system', content: REALITY_ANCHOR },
+      { role: 'user', content: `Extract main claim and search query from: ${text.substring(0, 1000)}` }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0,
+  });
+
+  const p = JSON.parse(res.choices[0].message.content);
+  return {
+    mainClaim: p.main_claim,
+    searchQuery: p.search_query,
+  };
+};
+
+// ============================================================
+// ⚖️ CLAIM VS WEB
+// ============================================================
+
+const compareClaimsVsWeb = async (claim, web) => {
+  const res = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages: [
+      { role: 'system', content: REALITY_ANCHOR },
+      { role: 'user', content: `Compare claim: "${claim}" with "${web}"` }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0,
+  });
+
+  const p = JSON.parse(res.choices[0].message.content);
+  return p.main_claim_verdict || 'UNKNOWN';
+};
+
+// ============================================================
+// 🚨 CATEGORY PENALTY
+// ============================================================
+
+const getCategoryPenalty = () => 0; // simplified
+
+// ============================================================
+// ✍️ EXPLANATION
+// ============================================================
+
+const generateExplanation = async (verdict, claim) => {
+  const res = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages: [
+      { role: 'system', content: REALITY_ANCHOR },
+      { role: 'user', content: `Explain why "${claim}" is ${verdict}` }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.3,
+  });
+
+  return JSON.parse(res.choices[0].message.content).explanation;
+};
+
+// ============================================================
+// 🚀 MAIN ANALYZE
+// ============================================================
+
+const analyze = async (req, res) => {
+  try {
+    const { inputContent } = req.body;
+    let articleText = inputContent;
+
+    // STEP 2 ML (fallback only)
+    let mlScore = 50;
+    try {
+      const mlRes = await axios.post('http://127.0.0.1:8001/analyze-text', { text: articleText });
+      mlScore = mlRes.data.text_score;
+    } catch { }
+
+    let finalScore, finalVerdict, explanation;
+
+    try {
+      const category = await detectCategory(articleText);
+      const extracted = await extractClaims(articleText);
+
+      const webRes = await axios.post('https://api.tavily.com/search', {
+        api_key: process.env.TAVILY_API_KEY,
+        query: extracted.searchQuery,
+      });
+
+      const webContext = webRes.data.answer || '';
+      const match = await compareClaimsVsWeb(extracted.mainClaim, webContext);
+
+      const penalty = getCategoryPenalty();
+
+      finalScore = calculateScore({
+        webMatchResult: match,
+        categoryPenalty: penalty,
+        domainBonus: 0
+      });
+
+      finalVerdict = scoreToVerdict(finalScore);
+      explanation = await generateExplanation(finalVerdict, extracted.mainClaim);
+
+    } catch (err) {
+      // 🔴 FALLBACK → ML ONLY
+      finalScore = Math.round(40 + ((mlScore - 50) / 50) * 20);
+      finalVerdict = scoreToVerdict(finalScore);
+      explanation = 'Fallback: ML only, not reliable.';
+    }
+
+    const record = await Analysis.create({
+      inputContent,
+      totalScore: finalScore,
+      verdict: finalVerdict,
+      details: { explanation }
+    });
+
+    res.json(record);
+
+  } catch (err) {
+    res.status(500).json({ message: 'Error' });
+  }
+};
+
+module.exports = { analyze };

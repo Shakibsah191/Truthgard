@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard - Login / Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0A0A0F',
+                        primary: '#7C3AED',
+                        secondary: '#06B6D4',
+                        success: '#10B981',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        html:not(.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+
+        /* Animated Blob Background */
+        .blobs-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: rgba(124, 58, 237, 0.3);
+            animation-delay: 0s;
+        }
+
+        html:not(.dark) .blob-1 {
+            background: rgba(124, 58, 237, 0.12);
+        }
+
+        .blob-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: rgba(6, 182, 212, 0.2);
+            animation-delay: -5s;
+        }
+
+        html:not(.dark) .blob-2 {
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 40%;
+            width: 40vw;
+            height: 40vw;
+            background: rgba(239, 68, 68, 0.1);
+            animation-delay: -10s;
+        }
+
+        html:not(.dark) .blob-3 {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(10%, -10%) scale(1.1); }
+            66% { transform: translate(-10%, 10%) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Custom Inputs */
+        .custom-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        html:not(.dark) .custom-input {
+            background: rgba(124, 58, 237, 0.04);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #1a1a1a;
+        }
+
+        html:not(.dark) .custom-input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #7C3AED;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+        }
+
+        .register-mode .custom-input:focus {
+            border-color: #06B6D4;
+            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+        }
+
+        /* Error States & Animations */
+        .input-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .error-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+            margin-bottom: 0;
+            padding: 0 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-alert.show {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 60px;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Buttons */
+        .btn-purple-glow {
+            background: linear-gradient(135deg, #7C3AED, #5B21B6);
+            transition: all 0.3s ease;
+        }
+
+        .btn-purple-glow:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-cyan-glow {
+            background: linear-gradient(135deg, #06B6D4, #0891B2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-cyan-glow:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #059669);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* Tabs */
+        .tab-btn {
+            position: relative;
+            color: #9CA3AF;
+            transition: color 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        html:not(.dark) .tab-btn.active {
+            color: #111827;
+        }
+
+        html:not(.dark) .tab-btn {
+            color: #6B7280;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            bottom: -2px;
+            height: 2px;
+            background: #7C3AED;
+            transition: all 0.3s ease;
+            width: 50%;
+        }
+
+        .register-mode .tab-indicator {
+            background: #06B6D4;
+        }
+
+        /* Tab border in light mode */
+        html:not(.dark) .tab-border {
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 50;
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen flex items-center justify-center relative px-4 bg-darkBg dark:bg-darkBg transition-colors duration-300" style="background-color: #0A0A0F;" id="bodyWrapper">
+
+    <div class="theme-toggle">
+        <button id="themeToggle" class="p-2.5 rounded-full bg-white/10 hover:bg-white/20 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-white/20 dark:border-white/10 transition-colors focus:outline-none shadow-sm">
+            <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600 hover:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="blobs-container">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="max-w-md w-full glass-card rounded-2xl p-8 shadow-2xl z-10">
+
+        <div class="text-center mb-8">
+            <a href="index.html" class="inline-flex items-center justify-center space-x-2 mb-4 group cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300" id="logoIconBg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" id="logoIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300" id="logoText">TruthGuard</span>
+            </a>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Sign in or create an account to view your analysis history.</p>
+        </div>
+
+        <div class="flex relative border-b border-white/10 tab-border mb-8">
+            <button class="w-1/2 pb-3 tab-btn active focus:outline-none" id="tabLogin" onclick="switchTab('login')">Login</button>
+            <button class="w-1/2 pb-3 tab-btn focus:outline-none" id="tabRegister" onclick="switchTab('register')">Register</button>
+            <div class="tab-indicator left-0" id="tabIndicator"></div>
+        </div>
+
+        <form id="formLogin" class="space-y-5">
+            <div id="loginError" class="error-alert">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="loginErrorText" class="text-sm font-medium"></span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+                <input type="email" id="loginEmail" required placeholder="you@example.com" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                <div class="relative">
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+                    <button type="button" onclick="togglePassword('loginPassword', 'eyeLogin')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                        <svg id="eyeLogin" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-sm">
+                <label class="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-800 dark:hover:text-gray-300">
+                    <input type="checkbox" class="mr-2 rounded border-white/10 bg-black/30 text-primary focus:ring-primary focus:ring-offset-0">
+                    Remember me
+                </label>
+                <a href="#" class="text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="w-full btn-purple-glow text-white font-bold py-3.5 rounded-xl shadow-lg mt-2 flex justify-center items-center transition-all duration-300">
+                Sign In
+            </button>
+        </form>
+
+        <form id="formRegister" class="space-y-4 hidden">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full Name</label>
+                <input type="text" id="regName" required placeholder="John Doe" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+                <input type="email" id="regEmail" required placeholder="you@example.com" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                <div class="relative">
+                    <input type="password" id="regPassword" required placeholder="••••••••" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+                    <button type="button" onclick="togglePassword('regPassword', 'eyeReg1')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                        <svg id="eyeReg1" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Confirm Password</label>
+                <div class="relative">
+                    <input type="password" id="regPassword2" required placeholder="••••••••" class="custom-input w-full px-4 py-3 rounded-xl focus:outline-none">
+                    <button type="button" onclick="togglePassword('regPassword2', 'eyeReg2')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                        <svg id="eyeReg2" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full btn-cyan-glow text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 flex justify-center items-center transition-all duration-300">
+                Create Account
+            </button>
+        </form>
+
+    </div>
+
+    <script>
+        // --- THEME TOGGLE (synced with index.html localStorage) ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        const bodyEl = document.body;
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                htmlElement.classList.add('dark');
+                bodyEl.style.backgroundColor = '#0A0A0F';
+            } else {
+                htmlElement.classList.remove('dark');
+                bodyEl.style.backgroundColor = '#F3F0FF';
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') { applyTheme(false); } 
+        else { applyTheme(true); }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = htmlElement.classList.contains('dark');
+            applyTheme(!isDark);
+            localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+        });
+
+        // --- TAB SWITCHING ---
+        function switchTab(tab) {
+            const formLogin = document.getElementById('formLogin');
+            const formRegister = document.getElementById('formRegister');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const indicator = document.getElementById('tabIndicator');
+            const bodyWrapper = document.getElementById('bodyWrapper');
+            const logoIconBg = document.getElementById('logoIconBg');
+            const logoIcon = document.getElementById('logoIcon');
+            const logoText = document.getElementById('logoText');
+
+            if (tab === 'login') {
+                formLogin.classList.remove('hidden');
+                formRegister.classList.add('hidden');
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+                indicator.style.transform = 'translateX(0%)';
+                bodyWrapper.classList.remove('register-mode');
+                logoIconBg.className = "w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300";
+                logoIcon.className = "h-5 w-5 text-primary";
+                logoText.className = "text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300";
+            } else {
+                formLogin.classList.add('hidden');
+                formRegister.classList.remove('hidden');
+                tabRegister.classList.add('active');
+                tabLogin.classList.remove('active');
+                indicator.style.transform = 'translateX(100%)';
+                bodyWrapper.classList.add('register-mode');
+                logoIconBg.className = "w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center border border-secondary/30 group-hover:bg-secondary/30 transition-colors duration-300";
+                logoIcon.className = "h-5 w-5 text-secondary";
+                logoText.className = "text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-secondary transition-colors duration-300";
+            }
+        }
+
+        // --- PASSWORD TOGGLE ---
+        function togglePassword(inputId, eyeId) {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+            if (input.type === "password") {
+                input.type = "text";
+                eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />`;
+            } else {
+                input.type = "password";
+                eye.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+            }
+        }
+
+        // --- REAL API AUTHENTICATION LOGIC ---
+        const API_BASE_URL = 'http://localhost:5000/api/auth';
+
+        // Handle Login
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const passwordInput = document.getElementById('loginPassword');
+            const password = passwordInput.value;
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            
+            // Error UI Elements
+            const errorAlert = document.getElementById('loginError');
+            const errorText = document.getElementById('loginErrorText');
+
+            // 1. Show Loading State
+            submitBtn.innerHTML = '<span class="spinner"></span> Authenticating...';
+            submitBtn.disabled = true;
+
+            // Reset previous error states
+            errorAlert.classList.remove('show');
+            passwordInput.classList.remove('input-error', 'animate-shake');
+            submitBtn.classList.remove('animate-shake');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Trigger error explicitly
+                    throw new Error('Invalid password. Please try again.');
+                }
+
+                // Save token and user data to localStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                // 2. Show Success State before redirecting
+                submitBtn.classList.remove('btn-purple-glow');
+                submitBtn.classList.add('btn-success');
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Login Successful!
+                `;
+
+                // Smooth delay before redirecting
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 800);
+
+            } catch (error) {
+                // 3. UI ERROR HANDLING - specifically showing invalid password message
+                errorText.innerText = "Invalid password. Please try again.";
+                errorAlert.classList.add('show');
+                
+                // Add shake animations and red styling
+                passwordInput.classList.add('input-error', 'animate-shake');
+                submitBtn.classList.add('animate-shake');
+                
+                // Remove shake classes after animation completes so it can trigger again
+                setTimeout(() => {
+                    passwordInput.classList.remove('animate-shake');
+                    submitBtn.classList.remove('animate-shake');
+                }, 500);
+
+                // Auto-hide the error alert after 4 seconds
+                setTimeout(() => {
+                    errorAlert.classList.remove('show');
+                    passwordInput.classList.remove('input-error');
+                }, 4000);
+
+                // Reset button text on error
+                submitBtn.innerText = 'Sign In';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Handle Registration
+        document.getElementById('formRegister').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regPassword2').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            submitBtn.innerHTML = '<span class="spinner"></span> Creating Account...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Registration failed');
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                submitBtn.classList.remove('btn-cyan-glow');
+                submitBtn.classList.add('btn-success');
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Account Created!
+                `;
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 800);
+
+            } catch (error) {
+                alert(error.message);
+                submitBtn.innerText = 'Create Account';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

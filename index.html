@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard - AI Powered Fact Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0A0A0F',
+                        primary: '#7C3AED',
+                        secondary: '#06B6D4',
+                        cardBg: 'rgba(255, 255, 255, 0.05)',
+                        cardBorder: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        html:not(.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+
+        .glow-bg {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .glow-purple {
+            position: absolute;
+            top: -10%;
+            left: 20%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        .glow-cyan {
+            position: absolute;
+            top: 20%;
+            right: 0%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        html:not(.dark) .glow-purple {
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 60%);
+        }
+
+        html:not(.dark) .glow-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, transparent 60%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #7C3AED, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .custom-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        html:not(.dark) .custom-input {
+            background: rgba(124, 58, 237, 0.04);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: #1a1a1a;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #7C3AED;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-purple-glow {
+            background: linear-gradient(135deg, #7C3AED, #5B21B6);
+            transition: all 0.3s ease;
+        }
+
+        .btn-purple-glow:hover {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-cyan-glow {
+            background: linear-gradient(135deg, #06B6D4, #0891B2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-cyan-glow:hover {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-orange-glow {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            transition: all 0.3s ease;
+        }
+
+        .btn-orange-glow:hover {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-green-glow {
+            background: linear-gradient(135deg, #10B981, #059669);
+            transition: all 0.3s ease;
+        }
+
+        .btn-green-glow:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-glass {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) .nav-glass {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .badge-glow {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        html:not(.dark) .badge-glow {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            background: rgba(124, 58, 237, 0.08);
+        }
+
+        .feature-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        html:not(.dark) .feature-pill {
+            background: rgba(124, 58, 237, 0.06);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+
+        /* ── Modal styles ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-box {
+            background: #12121a;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            border-radius: 1.25rem;
+            width: 100%;
+            max-width: 580px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: translateY(16px) scale(0.98);
+            transition: transform 0.25s ease;
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.15);
+        }
+
+        html:not(.dark) .modal-box {
+            background: #ffffff;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 60px rgba(124, 58, 237, 0.08);
+        }
+
+        .modal-overlay.open .modal-box {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem 1.75rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: #12121a;
+            border-radius: 1.25rem 1.25rem 0 0;
+        }
+
+        html:not(.dark) .modal-header {
+            background: #ffffff;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .modal-body {
+            padding: 1.75rem;
+        }
+
+        .modal-close {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        html:not(.dark) .modal-close {
+            background: rgba(124, 58, 237, 0.06);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+
+        .modal-close:hover {
+            background: rgba(124, 58, 237, 0.15);
+            color: #7C3AED;
+            border-color: rgba(124, 58, 237, 0.4);
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section h3 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7C3AED;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-section p {
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: #9ca3af;
+        }
+
+        html:not(.dark) .modal-section p {
+            color: #4b5563;
+        }
+
+        .modal-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 1.25rem 0;
+        }
+
+        html:not(.dark) .modal-divider {
+            border-top: 1px solid rgba(124, 58, 237, 0.08);
+        }
+
+        .contact-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            border-radius: 0.75rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #7C3AED;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .contact-chip:hover {
+            background: rgba(124, 58, 237, 0.2);
+            box-shadow: 0 0 16px rgba(124, 58, 237, 0.25);
+        }
+    </style>
+</head>
+
+<body
+    class="antialiased min-h-screen flex flex-col relative bg-gray-50 text-gray-900 dark:bg-darkBg dark:text-white transition-colors duration-300">
+
+    <div class="glow-bg">
+        <div class="glow-purple"></div>
+        <div class="glow-cyan"></div>
+    </div>
+
+    <nav class="sticky top-0 w-full z-50 nav-glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer group">
+                <div
+                    class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <span
+                    class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300">TruthGuard</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="auth.html" id="navAuthSection"
+                    class="px-5 py-2 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 transition-colors">Login</a>
+                <button id="mobileMenuBtn" class="md:hidden text-gray-900 dark:text-white focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+                <button id="themeToggle"
+                    class="p-2.5 rounded-full bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/10 transition-colors focus:outline-none shadow-sm ml-4">
+                    <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300 hover:text-white" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600 hover:text-gray-900" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobileMenu"
+            class="md:hidden absolute top-full left-0 w-full bg-white/95 dark:bg-darkBg/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 hidden flex-col items-center py-4 space-y-4 shadow-xl z-40 transition-all duration-300">
+            <a href="auth.html"
+                class="px-8 py-2.5 rounded-full bg-primary/20 border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-all duration-300">Login</a>
+            <a href="#how-it-works" class="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">How it
+                works</a>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center justify-center px-6 pt-16 pb-24">
+
+        <section class="max-w-5xl w-full flex flex-col items-center text-center mt-6 mb-16">
+            <div class="inline-flex items-center space-x-2 badge-glow px-4 py-1.5 rounded-full mb-8">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                </span>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">AI Powered Fact Checker</span>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] mb-8">
+                <span class="block text-gray-900 dark:text-white">Detect Fake News</span>
+                <span class="block text-gray-600 dark:text-gray-300">Before It Spreads</span>
+                <span class="block text-gradient pb-2">Across Bangladesh</span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-16 leading-relaxed">
+                Analyze any news article in seconds using AI, NLP, and template detection. Ensure what you read and
+                share is the truth.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full text-left mb-8">
+                <div
+                    class="glass-card rounded-2xl p-8 flex flex-col hover:border-primary/50 transition-colors duration-300 group">
+                    <div class="flex items-center space-x-4 mb-8">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Paste Article URL
+                        </h2>
+                    </div>
+                    <div class="flex-grow flex flex-col space-y-6">
+                        <div class="relative w-full">
+                            <input type="url" id="urlInput" placeholder="https://example.com/news-article..."
+                                class="custom-input w-full px-5 py-4 pr-12 rounded-xl placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary/50">
+                            <button onclick="pasteFromClipboard('urlInput')" title="Paste URL"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gray-200/50 dark:bg-white/10 hover:bg-gray-300/50 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 transition-colors z-10 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex-grow"></div>
+                        <button onclick="analyze('url')" id="btnUrl"
+                            class="btn-purple-glow w-full text-white font-semibold py-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-primary/20 mt-auto">
+                            <span>Analyze URL</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    class="glass-card rounded-2xl p-8 flex flex-col hover:border-secondary/50 transition-colors duration-300 group">
+                    <div class="flex items-center space-x-4 mb-8">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Paste Article Text
+                        </h2>
+                    </div>
+                    <div class="flex-grow flex flex-col space-y-6">
+                        <div class="relative flex-grow flex flex-col">
+                            <button onclick="pasteFromClipboard('textInput')" title="Paste from clipboard"
+                                class="absolute top-3 right-3 p-2 rounded-lg bg-gray-200/50 dark:bg-white/10 hover:bg-gray-300/50 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 transition-colors z-10 flex items-center space-x-1 group/paste">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span class="text-xs font-semibold">Paste</span>
+                            </button>
+                            <textarea id="textInput" rows="5"
+                                placeholder="Paste the raw text of the news article here to analyze..."
+                                class="custom-input w-full px-5 py-4 pr-20 rounded-xl placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:ring-2 focus:ring-secondary/50 flex-grow"></textarea>
+                        </div>
+                        <button onclick="analyze('text')" id="btnText"
+                            class="btn-cyan-glow w-full text-white font-semibold py-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-secondary/20 mt-auto">
+                            <span>Analyze Text</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full text-left">
+                <div
+                    class="glass-card rounded-2xl p-8 flex flex-col hover:border-yellow-500/50 transition-colors duration-300 group">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Emotion Detector
+                            </h2>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
+                        Detects the dominant emotional tone — fear, anger, joy, sadness — embedded in the article. High
+                        emotional intensity is a common manipulation tactic in fake news.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">😨 Fear
+                            detection</span>
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">😠 Anger
+                            signals</span>
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">🔥
+                            Intensity score</span>
+                    </div>
+                    <div class="flex-grow flex flex-col space-y-4 mt-auto">
+                        <div class="relative flex-grow flex flex-col">
+                            <button onclick="pasteFromClipboard('emotionInput')"
+                                class="absolute top-2 right-2 p-1.5 rounded bg-gray-200/50 dark:bg-white/10 hover:bg-gray-300/50 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 transition-colors z-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </button>
+                            <textarea id="emotionInput" rows="3" placeholder="Paste text here to detect emotion..."
+                                class="custom-input w-full px-4 py-3 pr-10 rounded-xl placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:ring-2 focus:ring-yellow-500/50"></textarea>
+                        </div>
+                        <button onclick="analyzeEmotion()" id="btnEmotion"
+                            class="btn-orange-glow w-full text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-yellow-500/20">
+                            <span>Analyze Emotion</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    class="glass-card rounded-2xl p-8 flex flex-col hover:border-green-500/50 transition-colors duration-300 group">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Claim Highlighter
+                        </h2>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
+                        Automatically extracts 2–3 main verifiable claims from the article and shows them separately
+                        with type labels and confidence ratings. Powered by Groq AI.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">📌 2–3 key
+                            claims</span>
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">🏷️ Type
+                            labels</span>
+                        <span class="feature-pill px-2.5 py-1 rounded-full text-gray-600 dark:text-gray-300">⚡ Groq
+                            powered</span>
+                    </div>
+                    <div class="flex-grow flex flex-col space-y-4 mt-auto">
+                        <div class="relative flex-grow flex flex-col">
+                            <button onclick="pasteFromClipboard('claimsInput')"
+                                class="absolute top-2 right-2 p-1.5 rounded bg-gray-200/50 dark:bg-white/10 hover:bg-gray-300/50 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 transition-colors z-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </button>
+                            <textarea id="claimsInput" rows="3" placeholder="Paste text here to extract claims..."
+                                class="custom-input w-full px-4 py-3 pr-10 rounded-xl placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:ring-2 focus:ring-green-500/50"></textarea>
+                        </div>
+                        <button onclick="analyzeClaims()" id="btnClaims"
+                            class="btn-green-glow w-full text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-green-500/20">
+                            <span>Analyze Claims</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="max-w-6xl w-full flex flex-col items-center mt-12 mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-16 text-gray-900 dark:text-white tracking-tight">How TruthGuard
+                Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                <div
+                    class="glass-card rounded-2xl p-8 text-center flex flex-col items-center hover:-translate-y-2 transition-transform duration-300 relative group">
+                    <div
+                        class="w-16 h-16 rounded-full bg-white dark:bg-darkBg border border-primary/40 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(124,58,237,0.3)] z-10 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-xl font-bold text-primary">1</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Input Content</h3>
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">Paste the URL of a news article
+                        or copy-paste its raw text directly into our secure platform.</p>
+                </div>
+                <div
+                    class="glass-card rounded-2xl p-8 text-center flex flex-col items-center hover:-translate-y-2 transition-transform duration-300 relative group">
+                    <div
+                        class="w-16 h-16 rounded-full bg-white dark:bg-darkBg border border-secondary/40 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(6,182,212,0.3)] z-10 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-xl font-bold text-secondary">2</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">AI Analysis</h3>
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">Our advanced NLP models scan the
+                        text, check against known hoaxes, analyze bias, detect emotions, and verify sources.</p>
+                </div>
+                <div
+                    class="glass-card rounded-2xl p-8 text-center flex flex-col items-center hover:-translate-y-2 transition-transform duration-300 group">
+                    <div
+                        class="w-16 h-16 rounded-full bg-white dark:bg-darkBg border border-gray-300 dark:border-white/30 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.15)] z-10 group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">3</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Get Results</h3>
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">Instantly receive a detailed
+                        authenticity score, emotion profile, extracted claims, and flagged content report.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-6xl w-full mt-12 mb-6">
+            <div
+                class="glass-card rounded-2xl p-8 md:p-12 border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-200 dark:divide-white/10">
+                    <div class="pt-6 md:pt-0">
+                        <div class="text-4xl md:text-5xl font-black mb-2 text-gradient">10,000+</div>
+                        <div class="text-gray-600 dark:text-gray-400 font-medium tracking-wide">Articles Analyzed</div>
+                    </div>
+                    <div class="pt-6 md:pt-0">
+                        <div class="text-4xl md:text-5xl font-black mb-2 text-gradient">94%</div>
+                        <div class="text-gray-600 dark:text-gray-400 font-medium tracking-wide">Detection Accuracy</div>
+                    </div>
+                    <div class="pt-6 md:pt-0">
+                        <div class="text-4xl md:text-5xl font-black mb-2 text-gradient">4+</div>
+                        <div class="text-gray-600 dark:text-gray-400 font-medium tracking-wide">Analysis Features</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer
+        class="w-full border-t border-gray-200 dark:border-white/5 py-8 mt-auto z-10 bg-white/50 dark:bg-darkBg/50 backdrop-blur-sm">
+        <div
+            class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-500">
+            <p>&copy; 2026 TruthGuard. Built for a safer information ecosystem in Bangladesh.</p>
+            <div class="flex space-x-6 mt-4 md:mt-0">
+                <button onclick="openModal('privacyModal')" class="hover:text-primary transition-colors">Privacy
+                    Policy</button>
+                <button onclick="openModal('termsModal')" class="hover:text-primary transition-colors">Terms of
+                    Service</button>
+                <button onclick="openModal('contactModal')"
+                    class="hover:text-primary transition-colors">Contact</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ══════════════════════════════════════════
+         PRIVACY POLICY MODAL
+    ══════════════════════════════════════════ -->
+    <div id="privacyModal" class="modal-overlay" onclick="handleOverlayClick(event, 'privacyModal')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Privacy Policy</h2>
+                </div>
+                <button class="modal-close" onclick="closeModal('privacyModal')">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-xs text-gray-500 dark:text-gray-500 mb-5">Last updated: April 2026 &nbsp;·&nbsp;
+                    Effective immediately</p>
+
+                <div class="modal-section">
+                    <h3>What We Collect</h3>
+                    <p>TruthGuard only processes the article text or URL you submit for analysis. We do not collect your
+                        name, email, or any personal identifiers unless you create an account. Account data (name,
+                        email, hashed password) is stored securely and never shared.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>How Your Content Is Used</h3>
+                    <p>Submitted text and URLs are sent to our backend and processed through the Groq AI API for
+                        analysis. We do not store your submitted content after the analysis response is returned. Your
+                        content is never used to train AI models or shared with advertisers.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Third-Party Services</h3>
+                    <p>We use the Groq AI API to power analysis features. Content you submit is subject to Groq's data
+                        handling policies during processing. We do not sell or rent your data to any third party under
+                        any circumstances.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Cookies & Analytics</h3>
+                    <p>TruthGuard may collect anonymous, aggregated usage statistics (page views, feature usage counts)
+                        to improve the service. No personally identifiable information is tied to these analytics. We do
+                        not use third-party ad trackers.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Your Rights</h3>
+                    <p>You may request deletion of your account and associated data at any time by contacting us at
+                        truthguard.bd@gmail.com. We will process deletion requests within 7 business days.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TERMS OF SERVICE MODAL
+    ══════════════════════════════════════════ -->
+    <div id="termsModal" class="modal-overlay" onclick="handleOverlayClick(event, 'termsModal')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Terms of Service</h2>
+                </div>
+                <button class="modal-close" onclick="closeModal('termsModal')">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-xs text-gray-500 dark:text-gray-500 mb-5">Last updated: April 2026 &nbsp;·&nbsp; By using
+                    TruthGuard, you agree to these terms.</p>
+
+                <div class="modal-section">
+                    <h3>Nature of the Service</h3>
+                    <p>TruthGuard is an AI-assisted research and awareness tool. Analysis results are probabilistic
+                        estimates based on language patterns and AI models — they are not definitive legal,
+                        journalistic, or editorial verdicts. Do not use TruthGuard results as the sole basis for
+                        publishing, legal action, or public accusation.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>No Warranty on Accuracy</h3>
+                    <p>We strive for high accuracy but make no guarantee that every result is correct. AI models can
+                        produce false positives or false negatives. Always apply your own critical judgment alongside
+                        TruthGuard's output.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Acceptable Use</h3>
+                    <p>You agree not to use TruthGuard to target or defame individuals, fabricate analysis results,
+                        automate bulk scraping of the service, or engage in any activity that disrupts the platform.
+                        Misuse to spread counter-misinformation is strictly prohibited.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Intellectual Property</h3>
+                    <p>The TruthGuard name, logo, interface, and underlying code are the property of the TruthGuard
+                        team. Analysis results generated for your submitted content may be used by you freely for
+                        non-commercial purposes.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Changes to Terms</h3>
+                    <p>We reserve the right to update these terms at any time. Continued use of TruthGuard after changes
+                        are posted constitutes acceptance of the revised terms. Major changes will be communicated via
+                        the platform.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         CONTACT MODAL
+    ══════════════════════════════════════════ -->
+    <div id="contactModal" class="modal-overlay" onclick="handleOverlayClick(event, 'contactModal')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Contact Us</h2>
+                </div>
+                <button class="modal-close" onclick="closeModal('contactModal')">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>Get in Touch</h3>
+                    <p>We're a small independent team building TruthGuard for Bangladesh's information ecosystem.
+                        Whether you've found a bug, have a feature idea, or want to collaborate — we'd love to hear from
+                        you.</p>
+                </div>
+
+                <div class="flex flex-col gap-3 my-6">
+                    <a href="mailto:truthguard.bd@gmail.com" class="contact-chip">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        truthguard.bd@gmail.com
+                    </a>
+                </div>
+
+                <p class="text-xs text-gray-500 dark:text-gray-500 mb-1">We typically respond within 48 hours.</p>
+
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Partnerships & Collaboration</h3>
+                    <p>Are you a journalist, researcher, media literacy NGO, or academic institution in Bangladesh?
+                        We're open to partnerships that further the cause of credible information. Reach out with a
+                        brief intro and we'll get back to you.</p>
+                </div>
+                <hr class="modal-divider">
+                <div class="modal-section">
+                    <h3>Bug Reports</h3>
+                    <p>Found something broken? Please email us with a description of the issue, the browser and device
+                        you're using, and steps to reproduce it. We take all reports seriously.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── THEME ────────────────────────────────────────────
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        if (localStorage.getItem('theme') === 'light' || (!('theme' in localStorage) && !window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.remove('dark');
+        } else {
+            htmlElement.classList.add('dark');
+        }
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                htmlElement.classList.toggle('dark');
+                localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+            });
+        }
+
+        // ─── MOBILE MENU ──────────────────────────────────────
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                mobileMenu.classList.toggle('flex');
+            });
+        }
+
+        // ─── MODALS ───────────────────────────────────────────
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function handleOverlayClick(e, id) {
+            if (e.target === document.getElementById(id)) closeModal(id);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                ['privacyModal', 'termsModal', 'contactModal'].forEach(closeModal);
+            }
+        });
+
+        // ─── PASTE FROM CLIPBOARD ─────────────────────────────
+        async function pasteFromClipboard(elementId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                const el = document.getElementById(elementId);
+                el.value = text;
+                el.classList.add('ring-2', 'ring-secondary/50');
+                setTimeout(() => el.classList.remove('ring-2', 'ring-secondary/50'), 300);
+            } catch (err) {
+                alert('Could not paste automatically. Please check your browser permissions or paste manually (Ctrl+V / Cmd+V).');
+            }
+        }
+
+        // ─── CORE ANALYZE (URL & TEXT) ─────────────────────────
+        async function analyze(type) {
+            let inputElement, btnElement, originalContent;
+            if (type === 'url') {
+                inputElement = document.getElementById('urlInput');
+                btnElement = document.getElementById('btnUrl');
+                if (!inputElement.value.trim()) { alert('Please enter a valid URL.'); return; }
+            } else {
+                inputElement = document.getElementById('textInput');
+                btnElement = document.getElementById('btnText');
+                if (!inputElement.value.trim()) { alert('Please paste some text to analyze.'); return; }
+            }
+            originalContent = btnElement.innerHTML;
+            btnElement.innerHTML = `<span>Analyzing...</span>`;
+            btnElement.disabled = true;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:5000/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    body: JSON.stringify({ inputType: type, inputContent: inputElement.value })
+                });
+                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+                const data = await response.json();
+                localStorage.setItem('truthguard_result', JSON.stringify(data.result));
+                inputElement.value = '';
+                window.location.href = 'results.html';
+            } catch (error) {
+                alert('An error occurred during analysis.');
+            } finally {
+                btnElement.innerHTML = originalContent;
+                btnElement.disabled = false;
+            }
+        }
+
+        // ─── EMOTION ANALYZE ──────────────────────────────────
+        async function analyzeEmotion() {
+            const inputElement = document.getElementById('emotionInput');
+            const btnElement = document.getElementById('btnEmotion');
+            if (!inputElement.value.trim()) { alert('Please paste some text to detect emotion.'); return; }
+            const originalContent = btnElement.innerHTML;
+            btnElement.innerHTML = `<span>Detecting...</span>`;
+            btnElement.disabled = true;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:5000/api/analyze/emotion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    body: JSON.stringify({ text: inputElement.value })
+                });
+                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+                const data = await response.json();
+                localStorage.setItem('truthguard_emotion_result', JSON.stringify(data));
+                inputElement.value = '';
+                window.location.href = 'emotion.html';
+            } catch (error) {
+                alert('An error occurred while detecting emotion.');
+            } finally {
+                btnElement.innerHTML = originalContent;
+                btnElement.disabled = false;
+            }
+        }
+
+        // ─── CLAIMS ANALYZE ───────────────────────────────────
+        async function analyzeClaims() {
+            const inputElement = document.getElementById('claimsInput');
+            const btnElement = document.getElementById('btnClaims');
+            if (!inputElement.value.trim()) { alert('Please paste some text to extract claims.'); return; }
+            const originalContent = btnElement.innerHTML;
+            btnElement.innerHTML = `<span>Extracting...</span>`;
+            btnElement.disabled = true;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:5000/api/analyze/claims', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    body: JSON.stringify({ text: inputElement.value })
+                });
+                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+                const data = await response.json();
+                localStorage.setItem('truthguard_claims_result', JSON.stringify(data.claims));
+                inputElement.value = '';
+                window.location.href = 'claims.html';
+            } catch (error) {
+                alert('An error occurred while extracting claims.');
+            } finally {
+                btnElement.innerHTML = originalContent;
+                btnElement.disabled = false;
+            }
+        }
+
+        // ─── AUTH UI ──────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const userString = localStorage.getItem('user');
+            const authSection = document.getElementById('navAuthSection');
+            if (token && userString && authSection) {
+                const user = JSON.parse(userString);
+                const firstName = user.name.split(' ')[0];
+               authSection.outerHTML = `
+    <div class="flex items-center space-x-3">
+        <span class="text-gray-800 dark:text-gray-200 font-medium text-sm">Hi, ${firstName}</span>
+        <a href="profile.html" class="flex items-center space-x-1.5 px-4 py-2 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 transition-colors text-sm font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>My profile</span>
+        </a>
+        <button onclick="logoutUser()" class="px-4 py-2 rounded-xl border border-red-500/50 text-red-500 hover:bg-red-500/10 transition-colors text-sm font-semibold">Logout</button>
+    </div>`;
+            }
+        });
+        function logoutUser() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.reload();
+        }
+    </script>
+</body>
+
+</html>

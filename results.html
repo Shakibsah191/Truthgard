@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard - Analysis Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0A0A0F',
+                        primary: '#7C3AED',
+                        secondary: '#06B6D4',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        html:not(.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.12);
+        }
+
+        .glow-bg {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .glow-purple {
+            position: absolute;
+            top: -10%;
+            left: 10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        .glow-cyan {
+            position: absolute;
+            bottom: -10%;
+            right: 0%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        .glow-danger {
+            position: absolute;
+            top: 30%;
+            right: 20%;
+            width: 30vw;
+            height: 30vw;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        html:not(.dark) .glow-purple {
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 60%);
+        }
+
+        html:not(.dark) .glow-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 60%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #7C3AED, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* ── Navbar ── */
+        .nav-glass {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) .nav-glass {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        html:not(.dark) .skeleton {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .progress-bar {
+            transition: width 1.5s ease-out;
+        }
+
+        .score-ring {
+            transition: stroke-dasharray 1.5s ease-out;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) .metric-card {
+            background: rgba(124, 58, 237, 0.04);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .progress-track {
+            background: #0A0A0F;
+        }
+
+        html:not(.dark) .progress-track {
+            background: rgba(124, 58, 237, 0.08);
+        }
+
+        .accordion-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        html:not(.dark) .accordion-item {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(124, 58, 237, 0.12);
+        }
+
+        .content-topbar {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        html:not(.dark) .content-topbar {
+            background: rgba(124, 58, 237, 0.04);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        /* ── Nav New Analysis button ── */
+        .nav-new-analysis-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(124, 58, 237, 0.35);
+            background: rgba(124, 58, 237, 0.1);
+            color: #7C3AED;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        html:not(.dark) .nav-new-analysis-btn {
+            border-color: rgba(124, 58, 237, 0.3);
+            background: rgba(124, 58, 237, 0.08);
+        }
+
+        .nav-new-analysis-btn:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+
+        /* ── Inline New Analysis (inside card header) ── */
+        .inline-new-analysis-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1.5px solid rgba(124, 58, 237, 0.4);
+            background: rgba(124, 58, 237, 0.1);
+            color: #7C3AED;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        html:not(.dark) .inline-new-analysis-btn {
+            border-color: rgba(124, 58, 237, 0.35);
+            background: rgba(124, 58, 237, 0.07);
+        }
+
+        .inline-new-analysis-btn:hover {
+            background: rgba(124, 58, 237, 0.22);
+            border-color: rgba(124, 58, 237, 0.7);
+            box-shadow: 0 3px 10px rgba(124, 58, 237, 0.2);
+        }
+
+        /* ── Card action buttons (Copy / PDF / Share) ── */
+        .card-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        html:not(.dark) .card-action-btn {
+            border-color: rgba(124, 58, 237, 0.12);
+            background: rgba(124, 58, 237, 0.04);
+            color: #6b7280;
+        }
+
+        .card-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #e5e7eb;
+        }
+
+        html:not(.dark) .card-action-btn:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.25);
+            color: #374151;
+        }
+
+        /* ── Bottom CTA card ── */
+        .cta-card {
+            position: relative;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            padding: 2rem 2.5rem;
+        }
+
+        .dark .cta-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        html:not(.dark) .cta-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(124, 58, 237, 0.12);
+            box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08);
+        }
+
+        /* gradient border glow on CTA */
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1.25rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(6, 182, 212, 0.4), rgba(124, 58, 237, 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .cta-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 80% 50%, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ── Analyze Another Article button ── */
+        .cta-analyze-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .cta-analyze-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cta-analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45), 0 4px 12px rgba(6, 182, 212, 0.25);
+        }
+
+        .cta-analyze-btn:hover::before {
+            opacity: 1;
+        }
+
+        .cta-analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ── CTA icon pulse ── */
+        .cta-icon-wrap {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            flex-shrink: 0;
+        }
+
+        html:not(.dark) .cta-icon-wrap {
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        /* ── AI Explanation Highlight Card ── */
+        .ai-explanation-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .ai-explanation-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, #7C3AED, #06B6D4, #7C3AED);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .dark .ai-explanation-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+        }
+
+        html:not(.dark) .ai-explanation-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(6, 182, 212, 0.04) 100%);
+        }
+
+        .ai-explanation-icon-ring {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(6, 182, 212, 0.3));
+            border: 1px solid rgba(124, 58, 237, 0.4);
+        }
+
+        .explanation-text-highlight {
+            line-height: 1.75;
+            font-size: 0.975rem;
+        }
+
+        .dark .explanation-text-highlight {
+            color: #e2e8f0;
+        }
+
+        html:not(.dark) .explanation-text-highlight {
+            color: #1e293b;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: pulse-dot 2s ease-in-out infinite;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        #copyToast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #copyToast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tooltip-custom {
+            display: none;
+            position: absolute;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            width: max-content;
+            max-width: 300px;
+        }
+
+        .dark .tooltip-custom {
+            background: rgba(20, 20, 25, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        html:not(.dark) .tooltip-custom {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        /* ── Key Findings collapsible ── */
+        .findings-toggle-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.875rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        html:not(.dark) .findings-toggle-btn {
+            background: rgba(124, 58, 237, 0.04);
+            border-color: rgba(124, 58, 237, 0.1);
+        }
+
+        .findings-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        html:not(.dark) .findings-toggle-btn:hover {
+            background: rgba(124, 58, 237, 0.08);
+        }
+    </style>
+</head>
+
+<body
+    class="antialiased min-h-screen flex flex-col relative transition-colors duration-300 bg-gray-50 dark:bg-darkBg text-gray-700 dark:text-gray-300"
+    id="bodyWrapper">
+
+    <div class="glow-bg">
+        <div class="glow-purple"></div>
+        <div class="glow-cyan"></div>
+        <div class="glow-danger" id="dangerGlow" style="opacity: 0; transition: opacity 1s;"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         NAVBAR — Clean & Minimal: Logo | New Analysis | Theme
+    ════════════════════════════════════════════════════════════════ -->
+    <nav class="sticky top-0 w-full z-50 nav-glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-18 py-4 flex items-center justify-between">
+
+            <!-- Logo -->
+            <a href="index.html" class="flex items-center space-x-3 cursor-pointer group">
+                <div
+                    class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <span
+                    class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300">TruthGuard</span>
+            </a>
+
+            <!-- Right side: New Analysis + Theme toggle only -->
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="nav-new-analysis-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Analysis
+                </a>
+
+                <button id="themeToggle"
+                    class="p-2 rounded-full bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/10 transition-colors focus:outline-none shadow-sm">
+                    <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center px-6 pt-10 pb-24 w-full">
+        <div class="max-w-7xl w-full">
+
+            <!-- Page header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        <span id="analysisDate">Analyzing...</span>
+                        <span>•</span>
+                        <span
+                            class="bg-gray-200 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300">URL
+                            Analysis</span>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight"
+                        id="articleTitle">
+                        <div class="skeleton h-10 w-3/4 rounded mb-2"></div>
+                    </h1>
+                    <a href="#"
+                        class="text-primary hover:text-primary/80 transition-colors text-sm flex items-center space-x-1"
+                        id="articleSource" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <span id="sourceUrlTag">example-news.com/article...</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════
+                 MAIN GRID: Score left | Content right
+            ════════════════════════════════════════════ -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- LEFT — Score + Metrics + Key Findings -->
+                <div class="lg:col-span-1 space-y-6">
+
+                    <!-- Score Card -->
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+                        <div id="scoreBgIndicator"
+                            class="absolute top-0 left-0 w-full h-1 bg-gray-300 dark:bg-gray-600 transition-colors duration-1000">
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Authenticity Score</h2>
+                        <div class="flex flex-col items-center justify-center mb-6">
+                            <div class="relative w-40 h-40">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(128,128,128,0.1)"
+                                        stroke-width="8" />
+                                    <circle id="scoreCircle" cx="50" cy="50" r="45" fill="none" stroke="#EF4444"
+                                        stroke-width="8" stroke-linecap="round" stroke-dasharray="0, 283"
+                                        class="score-ring" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-4xl font-black text-gray-900 dark:text-white"
+                                        id="scoreValue">--</span>
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Out
+                                        of 100</span>
+                                </div>
+                            </div>
+                            <div id="verdictBadge"
+                                class="mt-4 px-4 py-1.5 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 font-bold text-sm skeleton w-32 h-8">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6 border-t border-gray-200 dark:border-white/10 pt-6">
+                            <div class="metric-card p-3 rounded-xl">
+                                <p
+                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Text Analysis
+                                </p>
+                                <div class="flex items-end justify-between mb-1.5">
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
+                                            id="textScore">--</span><span
+                                            class="text-xs text-gray-400 font-normal">/40</span></span>
+                                </div>
+                                <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
+                                    <div id="textBar" class="h-full bg-primary progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-card p-3 rounded-xl">
+                                <p
+                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                    </svg>
+                                    Template Check
+                                </p>
+                                <div class="flex items-end justify-between mb-1.5">
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
+                                            id="templateScore">--</span><span
+                                            class="text-xs text-gray-400 font-normal">/25</span></span>
+                                </div>
+                                <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
+                                    <div id="templateBar" class="h-full bg-warning progress-bar" style="width: 0%">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-card p-3 rounded-xl">
+                                <p
+                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                    </svg>
+                                    Domain Age
+                                </p>
+                                <div class="flex items-end justify-between mb-1.5">
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
+                                            id="domainScore">--</span><span
+                                            class="text-xs text-gray-400 font-normal">/20</span></span>
+                                </div>
+                                <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
+                                    <div id="domainBar" class="h-full bg-danger progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-card p-3 rounded-xl">
+                                <p
+                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Headline Match
+                                </p>
+                                <div class="flex items-end justify-between mb-1.5">
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
+                                            id="headlineScore">--</span><span
+                                            class="text-xs text-gray-400 font-normal">/15</span></span>
+                                </div>
+                                <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
+                                    <div id="headlineBar" class="h-full bg-danger progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Findings — collapsible -->
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <button class="findings-toggle-btn" onclick="toggleFindings(this)">
+                            <span class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Key Findings
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-gray-400 findings-chevron transition-transform duration-300 rotate-180"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="findings-body px-5 pb-5 pt-4">
+                            <ul class="space-y-4" id="findingsList">
+                                <li class="skeleton h-16 w-full rounded-lg"></li>
+                                <li class="skeleton h-16 w-full rounded-lg"></li>
+                                <li class="skeleton h-16 w-full rounded-lg"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT — Analyzed Content with inline actions -->
+                <div class="lg:col-span-2 space-y-6 flex flex-col">
+                    <div class="glass-card rounded-2xl p-1 flex-grow flex flex-col">
+
+                        <!-- Card top bar: Title | + New Analysis | Copy | PDF | Share -->
+                        <div class="content-topbar px-5 py-3.5 rounded-t-2xl">
+                            <!-- Row 1: Title + New Analysis -->
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <h2
+                                    class="text-base font-semibold text-gray-900 dark:text-white flex items-center shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                    Analyzed Content
+                                </h2>
+                                <a href="index.html" class="inline-new-analysis-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    New Analysis
+                                </a>
+                            </div>
+
+                            <!-- Row 2: Legend + Action buttons -->
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <div class="flex gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                    <span class="flex items-center"><span
+                                            class="w-2.5 h-2.5 rounded bg-danger/50 border border-danger mr-1.5"></span>High
+                                        Risk</span>
+                                    <span class="flex items-center"><span
+                                            class="w-2.5 h-2.5 rounded bg-warning/50 border border-warning mr-1.5"></span>Unverified</span>
+                                </div>
+                                <!-- Copy / PDF / Share — contextual, inside the card -->
+                                <div class="flex items-center gap-2" id="cardActionButtons"
+                                    style="opacity:0; transition: opacity 0.4s;">
+                                    <button onclick="copyResultToClipboard()" class="card-action-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                        Copy
+                                    </button>
+                                    <button onclick="downloadPDF()" class="card-action-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        PDF
+                                    </button>
+                                    <button onclick="shareResult()" class="card-action-btn"
+                                        style="border-color: rgba(124,58,237,0.4); color: #7C3AED; background: rgba(124,58,237,0.08);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                        </svg>
+                                        Share
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article body -->
+                        <div class="p-6 md:p-8 overflow-y-auto" style="max-height: 500px;">
+                            <div id="articleBody"
+                                class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 font-medium"
+                                style="font-size: 1.05rem;">
+                                <div class="skeleton h-4 w-full rounded mb-3"></div>
+                                <div class="skeleton h-4 w-11/12 rounded mb-3"></div>
+                                <div class="skeleton h-4 w-full rounded mb-3"></div>
+                                <div class="skeleton h-4 w-4/5 rounded mb-8"></div>
+                                <div class="skeleton h-4 w-full rounded mb-3"></div>
+                                <div class="skeleton h-4 w-full rounded mb-3"></div>
+                                <div class="skeleton h-4 w-3/4 rounded mb-8"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Explanation highlight card -->
+            <div class="mt-8" id="aiExplanationSection" style="display:none;">
+                <div class="ai-explanation-card" id="aiExplanationCard">
+                    <div class="flex items-start space-x-4">
+                        <div class="ai-explanation-icon-ring mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <span class="live-dot"></span>
+                                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">AI
+                                    Verdict Explanation</h3>
+                                <span id="categoryBadge"
+                                    class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold border"></span>
+                            </div>
+                            <p class="explanation-text-highlight font-medium" id="aiExplanationText">Loading
+                                explanation...</p>
+                            <div id="contradictionAlert"
+                                class="hidden mt-4 flex items-start space-x-2 p-3 rounded-lg bg-danger/10 border border-danger/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-danger flex-shrink-0 mt-0.5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p class="text-xs text-danger font-medium leading-relaxed" id="contradictionText"></p>
+                            </div>
+                            <div id="mainClaimRow"
+                                class="hidden mt-4 pt-4 border-t border-white/10 dark:border-white/10">
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 font-semibold">
+                                    Main Claim Verified</p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 italic" id="mainClaimText"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Report Accordion -->
+            <div class="mt-2 glass-card rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Full Report Analysis</h2>
+                <div class="space-y-4">
+
+                    <div class="accordion-item rounded-xl overflow-hidden">
+                        <button
+                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
+                            onclick="toggleAccordion(this)">
+                            <span class="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary mr-1.5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                AI Verdict Explanation
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-gray-400 chevron transition-transform rotate-180" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="px-6 pb-5 text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
+                            id="accordionGroq">
+                            Loading AI explanation...
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-xl overflow-hidden">
+                        <button
+                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
+                            onclick="toggleAccordion(this)">
+                            <span class="font-semibold text-gray-900 dark:text-white">Content Analysis</span>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
+                            id="accordionContentAnalysis">
+                            Loading analysis details...
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-xl overflow-hidden">
+                        <button
+                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
+                            onclick="toggleAccordion(this)">
+                            <span class="font-semibold text-gray-900 dark:text-white">Template Analysis</span>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div
+                            class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4">
+                            Structural template check based on clickbait patterns and layout similarity to known fake
+                            news sites.
+                        </div>
+                    </div>
+
+                    <div class="accordion-item rounded-xl overflow-hidden">
+                        <button
+                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
+                            onclick="toggleAccordion(this)">
+                            <span class="font-semibold text-gray-900 dark:text-white">Domain Analysis</span>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
+                            id="accordionDomain">
+                            Domain age and HTTPS security analysis.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════
+                 BOTTOM CTA — "Want to check another claim?"
+            ════════════════════════════════════════════ -->
+            <div class="mt-6 cta-card" id="bottomCTA"
+                style="opacity:0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease;">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="cta-icon-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">Want to check another claim?</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Paste a new text, URL, or article
+                                to analyze instantly.</p>
+                        </div>
+                    </div>
+                    <a href="index.html" class="cta-analyze-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Analyze Another Article
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer
+        class="w-full border-t border-gray-200 dark:border-white/5 py-6 mt-auto bg-white/50 dark:bg-darkBg/50 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 text-center text-xs text-gray-500">
+            <p>Results generated by TruthGuard AI models tracking specific patterns relevant to Bangladesh media
+                context. Not a substitute for human critical thinking.</p>
+        </div>
+    </footer>
+
+    <div id="flagTooltip" class="tooltip-custom">
+        <div class="flex items-start">
+            <div id="tooltipIcon" class="mr-3 mt-1"></div>
+            <div>
+                <h4 id="tooltipTitle" class="font-bold text-gray-900 dark:text-white text-sm mb-1">...</h4>
+                <p id="tooltipDesc" class="text-xs text-gray-500 dark:text-gray-400">...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="copyToast"
+        class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 rounded-xl font-medium text-sm shadow-xl flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success dark:text-success" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // ─── THEME ───────────────────────────────────────────────────
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        function applyTheme(isDark) {
+            if (isDark) { htmlElement.classList.add('dark'); document.body.style.backgroundColor = '#0A0A0F'; }
+            else { htmlElement.classList.remove('dark'); document.body.style.backgroundColor = '#F3F0FF'; }
+        }
+        applyTheme(localStorage.getItem('theme') !== 'light');
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = htmlElement.classList.contains('dark');
+            applyTheme(!isDark);
+            localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+        });
+
+        // ─── ACCORDION ───────────────────────────────────────────────
+        function toggleAccordion(btn) {
+            const content = btn.nextElementSibling;
+            const chevron = btn.querySelector('.chevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        // ─── KEY FINDINGS TOGGLE ─────────────────────────────────────
+        function toggleFindings(btn) {
+            const body = btn.nextElementSibling;
+            const chevron = btn.querySelector('.findings-chevron');
+            body.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        // ─── LOAD DATA ───────────────────────────────────────────────
+        let apiResult = null;
+        try {
+            const rawData = localStorage.getItem('truthguard_result');
+            if (!rawData) { window.location.href = 'index.html'; }
+            apiResult = JSON.parse(rawData);
+        } catch (e) {
+            console.error('Failed to load result data:', e);
+            window.location.href = 'index.html';
+        }
+
+        let mockData = {};
+
+        const CATEGORY_META = {
+            POLITICS: { label: '🏛️ Politics', color: 'text-purple-400 border-purple-400/40 bg-purple-400/10' },
+            HEALTH: { label: '🏥 Health', color: 'text-green-400  border-green-400/40  bg-green-400/10' },
+            SPORTS: { label: '⚽ Sports', color: 'text-blue-400   border-blue-400/40   bg-blue-400/10' },
+            ECONOMY: { label: '💰 Economy', color: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
+            WORLD: { label: '🌍 World News', color: 'text-cyan-400   border-cyan-400/40   bg-cyan-400/10' },
+            GENERAL: { label: '📰 General', color: 'text-gray-400   border-gray-400/40   bg-gray-400/10' },
+        };
+
+        function buildMockData() {
+            let findingsArray = [];
+            findingsArray.push({
+                type: apiResult.details.aiLabel === 'FAKE' ? 'danger' : 'warning',
+                title: 'AI Linguistic Analysis',
+                desc: `Model detected language patterns consistent with ${apiResult.details.aiLabel || 'UNKNOWN'} content. Sentiment is mostly ${apiResult.details.sentiment || 'neutral'}.`
+            });
+            if (apiResult.inputType === 'url') {
+                findingsArray.push({
+                    type: apiResult.details.isHttps ? 'warning' : 'danger',
+                    title: 'Domain Security',
+                    desc: apiResult.details.isHttps ? 'Connection is secure (HTTPS).' : 'Insecure connection detected. Lacks SSL certificate.'
+                });
+                if (apiResult.details.domainAge !== null) {
+                    findingsArray.push({
+                        type: apiResult.details.domainAge > 365 ? 'warning' : 'danger',
+                        title: 'Domain Age',
+                        desc: `Domain is ${apiResult.details.domainAge} days old. ${apiResult.details.domainAge < 30 ? 'Newly registered domains are highly suspicious.' : 'Established domain.'}`
+                    });
+                }
+            }
+
+            mockData = {
+                title: apiResult.inputType === 'url' ? 'Analysis of Provided URL' : 'Analysis of Provided Text',
+                source: apiResult.inputType === 'url' ? apiResult.inputContent : 'Direct Text Input',
+                dateAnalyzed: new Date(apiResult.createdAt || Date.now()).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                authenticityScore: Math.round(apiResult.totalScore || 0),
+                textAnalysisScore: Math.round(apiResult.textScore || 0),
+                templateCheckScore: Math.round(apiResult.templateScore || 0),
+                domainAgeScore: Math.round(apiResult.domainScore || 0),
+                headlineMatchScore: Math.round(apiResult.headlineScore || 0),
+                findings: findingsArray,
+                paragraphs: apiResult.details.articleText
+                    ? apiResult.details.articleText.split('\n').filter(p => p.trim() !== '')
+                    : ['No text could be extracted.'],
+                groqExplanation: apiResult.details.groqExplanation || 'No explanation available.',
+                category: apiResult.details.category || 'GENERAL',
+                mainClaim: apiResult.details.mainClaim || null,
+                contradictionFound: apiResult.details.contradictionFound || false,
+                contradictionDetail: apiResult.details.contradictionDetail || null,
+                aiLabel: apiResult.details.aiLabel || 'UNKNOWN',
+                sentiment: apiResult.details.sentiment || 'neutral',
+                clickbaitScore: apiResult.details.clickbaitScore || 0,
+                domainAge: apiResult.details.domainAge,
+                isHttps: apiResult.details.isHttps,
+                articleText: apiResult.details.articleText || apiResult.inputContent || ''
+            };
+        }
+
+        function renderAIExplanationCard() {
+            const section = document.getElementById('aiExplanationSection');
+            const textEl = document.getElementById('aiExplanationText');
+            const card = document.getElementById('aiExplanationCard');
+            section.style.display = 'block';
+            textEl.textContent = mockData.groqExplanation;
+
+            const score = mockData.authenticityScore;
+            if (score < 35) {
+                card.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.05) 100%)';
+            } else if (score < 55) {
+                card.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)';
+            } else if (score < 75) {
+                card.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.05) 100%)';
+            } else {
+                card.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.05) 100%)';
+            }
+
+            const catMeta = CATEGORY_META[mockData.category] || CATEGORY_META['GENERAL'];
+            const badgeEl = document.getElementById('categoryBadge');
+            badgeEl.textContent = catMeta.label;
+            badgeEl.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold border ${catMeta.color}`;
+            badgeEl.classList.remove('hidden');
+
+            if (mockData.contradictionFound && mockData.contradictionDetail) {
+                const alertEl = document.getElementById('contradictionAlert');
+                document.getElementById('contradictionText').textContent = `Contradiction detected: ${mockData.contradictionDetail}`;
+                alertEl.classList.remove('hidden');
+                alertEl.style.display = 'flex';
+            }
+
+            if (mockData.mainClaim) {
+                document.getElementById('mainClaimRow').classList.remove('hidden');
+                document.getElementById('mainClaimText').textContent = mockData.mainClaim;
+            }
+        }
+
+        function renderResults() {
+            document.getElementById('analysisDate').innerText = `Analyzed on ${mockData.dateAnalyzed}`;
+            document.getElementById('articleTitle').innerHTML = mockData.title;
+
+            const sourceEl = document.getElementById('articleSource');
+            sourceEl.style.display = 'inline-flex';
+            document.getElementById('sourceUrlTag').innerText = mockData.source;
+
+            // Findings
+            const findingsList = document.getElementById('findingsList');
+            findingsList.innerHTML = '';
+            mockData.findings.forEach(finding => {
+                const iconColor = finding.type === 'danger' ? 'text-danger' : 'text-warning';
+                const bgColor = finding.type === 'danger' ? 'bg-danger/10 border-danger/30' : 'bg-warning/10 border-warning/30';
+                const iconHtml = finding.type === 'danger'
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${iconColor} mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${iconColor} mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+                findingsList.innerHTML += `
+                    <li class="p-4 rounded-xl border ${bgColor} flex items-start space-x-3">
+                        ${iconHtml}
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-1">${finding.title}</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">${finding.desc}</p>
+                        </div>
+                    </li>`;
+            });
+
+            document.getElementById('articleBody').innerHTML = mockData.paragraphs.map(p => `<p>${p}</p>`).join('');
+            document.getElementById('accordionGroq').innerText = mockData.groqExplanation;
+            document.getElementById('accordionContentAnalysis').innerText =
+                `Text credibility score: ${mockData.textAnalysisScore}/40. AI label: ${mockData.aiLabel}. Sentiment: ${mockData.sentiment}. Clickbait score: ${mockData.clickbaitScore}.`;
+            document.getElementById('accordionDomain').innerText =
+                mockData.domainAge !== null
+                    ? `Domain age: ${mockData.domainAge} days. HTTPS: ${mockData.isHttps ? 'Yes ✓' : 'No ✗'}.`
+                    : 'Domain information not available (text input mode).';
+
+            // Reveal card action buttons
+            document.getElementById('cardActionButtons').style.opacity = '1';
+
+            // Reveal bottom CTA with animation
+            setTimeout(() => {
+                const cta = document.getElementById('bottomCTA');
+                cta.style.opacity = '1';
+                cta.style.transform = 'translateY(0)';
+            }, 800);
+
+            // Score ring + verdict
+            let colorHex, colorClass, verdictText;
+            if (mockData.authenticityScore < 35) {
+                colorHex = '#EF4444'; colorClass = 'bg-danger'; verdictText = 'HIGHLY LIKELY FAKE';
+                document.getElementById('dangerGlow').style.opacity = '1';
+            } else if (mockData.authenticityScore < 55) {
+                colorHex = '#F59E0B'; colorClass = 'bg-warning'; verdictText = 'UNVERIFIED';
+            } else if (mockData.authenticityScore < 75) {
+                colorHex = '#06B6D4'; colorClass = 'bg-secondary'; verdictText = 'LIKELY REAL';
+            } else {
+                colorHex = '#10B981'; colorClass = 'bg-success'; verdictText = 'REAL';
+            }
+
+            document.getElementById('scoreBgIndicator').className =
+                `absolute top-0 left-0 w-full h-1 transition-colors duration-1000 ${colorClass}`;
+
+            const circumference = 2 * Math.PI * 45;
+            const circleEl = document.getElementById('scoreCircle');
+            circleEl.style.stroke = colorHex;
+            const offset = circumference - (mockData.authenticityScore / 100) * circumference;
+
+            setTimeout(() => {
+                circleEl.style.strokeDasharray = `${circumference - offset}, ${circumference}`;
+
+                let startTimestamp = null;
+                const scoreValueEl = document.getElementById('scoreValue');
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / 1500, 1);
+                    const ease = 1 - Math.pow(1 - progress, 4);
+                    scoreValueEl.innerText = Math.floor(ease * mockData.authenticityScore);
+                    if (progress < 1) window.requestAnimationFrame(step);
+                    else scoreValueEl.innerText = mockData.authenticityScore;
+                };
+                window.requestAnimationFrame(step);
+
+                const verdictEl = document.getElementById('verdictBadge');
+                verdictEl.classList.remove('skeleton', 'w-32', 'bg-gray-200', 'dark:bg-gray-800', 'border-gray-300', 'dark:border-gray-600');
+                if (colorClass === 'bg-danger') verdictEl.classList.add('bg-danger/20', 'border-danger/50', 'text-danger');
+                else if (colorClass === 'bg-warning') verdictEl.classList.add('bg-warning/20', 'border-warning/50', 'text-warning');
+                else verdictEl.classList.add('bg-success/20', 'border-success/50', 'text-success');
+                verdictEl.innerText = verdictText;
+
+                document.getElementById('textBar').style.width = `${(mockData.textAnalysisScore / 40) * 100}%`;
+                document.getElementById('templateBar').style.width = `${(mockData.templateCheckScore / 25) * 100}%`;
+                document.getElementById('domainBar').style.width = `${(mockData.domainAgeScore / 20) * 100}%`;
+                document.getElementById('headlineBar').style.width = `${(mockData.headlineMatchScore / 15) * 100}%`;
+
+                setTimeout(() => {
+                    document.getElementById('textScore').innerText = mockData.textAnalysisScore;
+                    document.getElementById('templateScore').innerText = mockData.templateCheckScore;
+                    document.getElementById('domainScore').innerText = mockData.domainAgeScore;
+                    document.getElementById('headlineScore').innerText = mockData.headlineMatchScore;
+                }, 1000);
+            }, 300);
+        }
+
+        // ─── PDF ──────────────────────────────────────────────────────
+        function downloadPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                let y = 20;
+
+                doc.setFillColor(124, 58, 237);
+                doc.rect(0, 0, pageW, 16, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+                doc.text('TruthGuard — Analysis Report', 14, 11);
+                doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+                doc.text(`Generated: ${mockData.dateAnalyzed}`, pageW - 14, 11, { align: 'right' });
+
+                y = 28;
+                doc.setTextColor(30, 30, 30);
+
+                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
+                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
+                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
+                const scoreColor = mockData.authenticityScore >= 70 ? [16, 185, 129] : mockData.authenticityScore >= 40 ? [245, 158, 11] : [239, 68, 68];
+
+                doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+                doc.setTextColor(...scoreColor);
+                doc.text(`${mockData.authenticityScore}/100`, 14, y);
+                doc.setFontSize(11); doc.setTextColor(30, 30, 30);
+                doc.text(verdictText, 14, y + 8);
+                y += 18;
+
+                doc.setDrawColor(200, 200, 200);
+                doc.line(14, y, pageW - 14, y); y += 8;
+
+                doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                doc.text('Source:', 14, y);
+                doc.setFont('helvetica', 'normal');
+                const sourceLines = doc.splitTextToSize(mockData.source, pageW - 40);
+                doc.text(sourceLines, 35, y);
+                y += sourceLines.length * 5 + 6;
+
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+                doc.text('AI Verdict Explanation', 14, y); y += 7;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                if (mockData.groqExplanation) {
+                    const lines = doc.splitTextToSize(mockData.groqExplanation, pageW - 28);
+                    doc.text(lines, 14, y);
+                    y += lines.length * 5 + 6;
+                }
+
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+                doc.text('Score Breakdown', 14, y); y += 7;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                [
+                    ['Text Analysis', `${mockData.textAnalysisScore} / 40`],
+                    ['Template Check', `${mockData.templateCheckScore} / 25`],
+                    ['Domain Age', `${mockData.domainAgeScore} / 20`],
+                    ['Headline Match', `${mockData.headlineMatchScore} / 15`],
+                ].forEach(([label, val]) => { doc.text(`• ${label}: ${val}`, 16, y); y += 5.5; });
+
+                doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+                doc.text('TruthGuard — AI-powered fact checking for Bangladesh media', 14, 287);
+                doc.text('Page 1', pageW - 14, 287, { align: 'right' });
+
+                doc.save(`TruthGuard_Report_${Date.now()}.pdf`);
+            } catch (e) {
+                console.error('PDF generation failed:', e);
+                alert('Could not generate PDF. Please try again.');
+            }
+        }
+
+        // ─── COPY ─────────────────────────────────────────────────────
+        function copyResultToClipboard() {
+            try {
+                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
+                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
+                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
+                const summary = `TruthGuard Analysis Result
+──────────────────────────
+Score: ${mockData.authenticityScore}/100 — ${verdictText}
+Source: ${mockData.source}
+Date: ${mockData.dateAnalyzed}
+
+AI Verdict: ${mockData.groqExplanation || 'N/A'}
+
+Score Breakdown:
+• Text Analysis: ${mockData.textAnalysisScore}/40
+• Template Check: ${mockData.templateCheckScore}/25
+• Domain Age: ${mockData.domainAgeScore}/20
+• Headline Match: ${mockData.headlineMatchScore}/15
+
+Generated by TruthGuard`;
+
+                navigator.clipboard.writeText(summary).then(() => {
+                    const toast = document.getElementById('copyToast');
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2500);
+                }).catch(() => alert('Could not copy — please copy manually.'));
+            } catch (e) {
+                console.error('Copy failed:', e);
+            }
+        }
+
+        // ─── SHARE ────────────────────────────────────────────────────
+        function shareResult() {
+            try {
+                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
+                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
+                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
+                const text = `I fact-checked an article with TruthGuard — Score: ${mockData.authenticityScore}/100 (${verdictText})`;
+                if (navigator.share) {
+                    navigator.share({ title: 'TruthGuard Analysis', text, url: window.location.href }).catch(() => { });
+                } else {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const toast = document.getElementById('copyToast');
+                        toast.classList.add('show');
+                        setTimeout(() => toast.classList.remove('show'), 2500);
+                    });
+                }
+            } catch (e) {
+                console.error('Share failed:', e);
+            }
+        }
+
+        // ─── INIT ─────────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                buildMockData();
+                renderResults();
+                renderAIExplanationCard();
+            } catch (e) {
+                console.error('Render error:', e);
+            }
+        });
+    </script>
+</body>
+
+</html>

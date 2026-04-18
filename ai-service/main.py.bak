@@ -1,0 +1,62 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+import torch
+app = FastAPI()
+# Load BanglaBERT model on startup
+print("Loading BanglaBERT model... (first time takes a few minutes)")
+model_name = "sagorsarker/bangla-bert-base"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+model.eval()
+print("Model loaded successfully!")
+# Bangla clickbait/sensational keywords
+CLICKBAIT_WORDS = [
+    "অবিশ্বাস্য", "চাঞ্চল্যকর", "বিস্ফোরক", "ভাইরাল",
+    "শকিং", "অবাক", "রহস্য", "গোপন", "ফাঁস",
+    "একচেটিয়া", "জরুরি", "সতর্কতা", "আতঙ্ক"
+]
+class AnalyzeRequest(BaseModel):
+    text: str
+def get_clickbait_score(text: str) -> float:
+    count = sum(1 for word in CLICKBAIT_WORDS if word in text)
+    score = min(count * 15, 90)  # max 90
+    return score
+def get_sentiment(text: str) -> str:
+    emotional_words = ["ভয়", "আতঙ্ক", "ক্রোধ", "ঘৃণা", "বিপদ", "সংকট"]
+    count = sum(1 for word in emotional_words if word in text)
+    return "emotional" if count >= 2 else "neutral"
+def get_text_score(text: str) -> float:
+    # Tokenize and run through BanglaBERT
+    inputs = tokenizer(
+        text[:512],  # BERT max length
+        return_tensors="pt",
+        truncation=True,
+        padding=True
+    )
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = torch.softmax(outputs.logits, dim=1)
+        # Index 1 = REAL probability
+        real_prob = probs[0][1].item()
+    return round(real_prob * 100, 2)
+@app.post("/analyze-text")
+def analyze_text(data: AnalyzeRequest):
+    text = data.text
+    if not text or len(text.strip()) < 10:
+        return {
+            "text_score": 50,
+            "label": "UNKNOWN",
+            "sentiment": "neutral",
+            "clickbait_score": 0
+        }
+    text_score = get_text_score(text)
+    clickbait_score = get_clickbait_score(text)
+    sentiment = get_sentiment(text)
+    label = "REAL" if text_score >= 50 else "FAKE"
+    return {
+        "text_score": text_score,
+        "label": label,
+        "sentiment": sentiment,
+        "clickbait_score": clickbait_score
+    }

@@ -1,0 +1,8 @@
+.env
+backend/.env
+backend/node_modules/
+ai-service/venv/
+ai-service/__pycache__/
+scraper/venv/
+scraper/__pycache__/
+

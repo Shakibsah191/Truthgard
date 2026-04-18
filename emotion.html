@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard - Emotion Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0A0A0F', primary: '#7C3AED', secondary: '#06B6D4',
+                        danger: '#EF4444', warning: '#F59E0B', success: '#10B981',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        html:not(.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.12);
+        }
+
+        .glow-bg {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .glow-purple {
+            position: absolute;
+            top: -10%;
+            left: 10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        .glow-cyan {
+            position: absolute;
+            bottom: -10%;
+            right: 0%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, rgba(10, 10, 15, 0) 60%);
+            border-radius: 50%;
+        }
+
+        html:not(.dark) .glow-purple {
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 60%);
+        }
+
+        html:not(.dark) .glow-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 60%);
+        }
+
+        /* ── Navbar — clean & minimal ── */
+        .nav-glass {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) .nav-glass {
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        /* Nav New Analysis button */
+        .nav-new-analysis-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(124, 58, 237, 0.35);
+            background: rgba(124, 58, 237, 0.1);
+            color: #7C3AED;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        html:not(.dark) .nav-new-analysis-btn {
+            border-color: rgba(124, 58, 237, 0.3);
+            background: rgba(124, 58, 237, 0.08);
+        }
+
+        .nav-new-analysis-btn:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+
+        .score-ring {
+            transition: stroke-dasharray 1.5s ease-out;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) .metric-card {
+            background: rgba(124, 58, 237, 0.04);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        /* ── Content topbar ── */
+        .content-topbar {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        html:not(.dark) .content-topbar {
+            background: rgba(124, 58, 237, 0.04);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        /* ── Inline New Analysis (inside card header) ── */
+        .inline-new-analysis-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1.5px solid rgba(124, 58, 237, 0.4);
+            background: rgba(124, 58, 237, 0.1);
+            color: #7C3AED;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        html:not(.dark) .inline-new-analysis-btn {
+            border-color: rgba(124, 58, 237, 0.35);
+            background: rgba(124, 58, 237, 0.07);
+        }
+
+        .inline-new-analysis-btn:hover {
+            background: rgba(124, 58, 237, 0.22);
+            border-color: rgba(124, 58, 237, 0.7);
+            box-shadow: 0 3px 10px rgba(124, 58, 237, 0.2);
+        }
+
+        /* ── Card action buttons (Copy / PDF / Share) ── */
+        .card-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        html:not(.dark) .card-action-btn {
+            border-color: rgba(124, 58, 237, 0.12);
+            background: rgba(124, 58, 237, 0.04);
+            color: #6b7280;
+        }
+
+        .card-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #e5e7eb;
+        }
+
+        html:not(.dark) .card-action-btn:hover {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.25);
+            color: #374151;
+        }
+
+        /* ── Bottom CTA card ── */
+        .cta-card {
+            position: relative;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            padding: 2rem 2.5rem;
+        }
+
+        .dark .cta-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        html:not(.dark) .cta-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(124, 58, 237, 0.12);
+            box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08);
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1.25rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(6, 182, 212, 0.4), rgba(124, 58, 237, 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .cta-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 80% 50%, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-analyze-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .cta-analyze-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cta-analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45), 0 4px 12px rgba(6, 182, 212, 0.25);
+        }
+
+        .cta-analyze-btn:hover::before {
+            opacity: 1;
+        }
+
+        .cta-icon-wrap {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            flex-shrink: 0;
+        }
+
+        html:not(.dark) .cta-icon-wrap {
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        /* Emotion explanation card */
+        .emotion-explanation-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .emotion-explanation-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, #7C3AED, #06B6D4, #7C3AED);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .dark .emotion-explanation-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+        }
+
+        html:not(.dark) .emotion-explanation-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(6, 182, 212, 0.04) 100%);
+        }
+
+        .emotion-icon-ring {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(6, 182, 212, 0.3));
+            border: 1px solid rgba(124, 58, 237, 0.4);
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: pulse-dot 2s ease-in-out infinite;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        #copyToast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #copyToast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Emotion bar */
+        .emo-bar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        html:not(.dark) .emo-bar-track {
+            background: rgba(124, 58, 237, 0.08);
+        }
+
+        .emo-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1.4s ease-out;
+            width: 0%;
+        }
+    </style>
+</head>
+
+<body
+    class="antialiased min-h-screen flex flex-col relative transition-colors duration-300 bg-gray-50 dark:bg-darkBg text-gray-700 dark:text-gray-300">
+
+    <div class="glow-bg">
+        <div class="glow-purple"></div>
+        <div class="glow-cyan"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         NAVBAR — Clean & Minimal: Logo | New Analysis | Theme
+    ════════════════════════════════════════════════════════ -->
+   <nav class="sticky top-0 w-full z-50 nav-glass transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <a href="index.html" class="flex items-center space-x-3 cursor-pointer group">
+            <div
+                class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <span
+                class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300">TruthGuard</span>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="nav-new-analysis-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                New Analysis
+            </a>
+            <button id="themeToggle"
+                class="p-2 rounded-full bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/10 transition-colors focus:outline-none shadow-sm">
+                <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+    <main class="flex-grow flex flex-col items-center px-6 pt-10 pb-24 w-full">
+        <div class="max-w-7xl w-full">
+
+            <!-- Page header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        <span id="analysisDate">Just now</span>
+                        <span>•</span>
+                        <span
+                            class="bg-gray-200 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300">Emotion
+                            Analysis</span>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">Emotional
+                        Tone Analysis</h1>
+                </div>
+            </div>
+
+            <!-- Main grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- LEFT: Score ring + emotion breakdown -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+                        <div id="scoreBgIndicator"
+                            class="absolute top-0 left-0 w-full h-1 bg-gray-300 dark:bg-gray-600 transition-all duration-1000">
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Emotion Intensity</h2>
+                        <div class="flex flex-col items-center justify-center mb-6">
+                            <div class="relative w-40 h-40">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(128,128,128,0.1)"
+                                        stroke-width="8" />
+                                    <circle id="scoreCircle" cx="50" cy="50" r="45" fill="none" stroke="#9CA3AF"
+                                        stroke-width="8" stroke-linecap="round" stroke-dasharray="0,283"
+                                        class="score-ring" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-4xl font-black text-gray-900 dark:text-white"
+                                        id="scoreValue">--</span>
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Intensity</span>
+                                </div>
+                            </div>
+                            <div id="verdictBadge"
+                                class="mt-4 px-5 py-1.5 rounded-full border font-bold text-sm uppercase tracking-widest">
+                                Loading...</div>
+                            <div id="labelBn" class="mt-1 text-sm text-gray-500 dark:text-gray-400"></div>
+                        </div>
+
+                        <!-- Emotion signal bars -->
+                        <div class="border-t border-gray-200 dark:border-white/10 pt-5 space-y-3" id="emotionBars">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Analyzed content with inline actions -->
+                <div class="lg:col-span-2 space-y-6 flex flex-col">
+                    <div class="glass-card rounded-2xl p-1 flex-grow flex flex-col">
+
+                        <!-- Card topbar: two rows -->
+                        <div class="content-topbar px-5 py-3.5 rounded-t-2xl">
+                            <!-- Row 1: Title + New Analysis -->
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <h2
+                                    class="text-base font-semibold text-gray-900 dark:text-white flex items-center shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                    Analyzed Content
+                                </h2>
+                                <a href="index.html" class="inline-new-analysis-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    New Analysis
+                                </a>
+                            </div>
+
+                            <!-- Row 2: Dominant tag + action buttons -->
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <span id="dominantTag"
+                                    class="text-xs font-semibold px-3 py-1 rounded-full border hidden"></span>
+                                <!-- Copy / PDF / Share — contextual, inside the card -->
+                                <div class="flex items-center gap-2" id="cardActionButtons"
+                                    style="opacity:0; transition:opacity 0.4s;">
+                                    <button onclick="copyResult()" class="card-action-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                        Copy
+                                    </button>
+                                    <button onclick="downloadPDF()" class="card-action-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        PDF
+                                    </button>
+                                    <button onclick="shareResult()" class="card-action-btn"
+                                        style="border-color:rgba(124,58,237,0.4);color:#7C3AED;background:rgba(124,58,237,0.08);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                        </svg>
+                                        Share
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Article body -->
+                        <div class="p-6 md:p-8 overflow-y-auto" style="max-height:500px;">
+                            <div id="articleBody"
+                                class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 font-medium"
+                                style="font-size:1.05rem;">
+                                Loading analyzed content...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Emotion Explanation card -->
+            <div class="mt-8" id="explanationSection" style="display:none;">
+                <div class="emotion-explanation-card" id="explanationCard">
+                    <div class="flex items-start space-x-4">
+                        <div class="emotion-icon-ring mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <span class="live-dot"></span>
+                                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">
+                                    Emotion Analysis Summary</h3>
+                                <span id="emotionBadgeLarge"
+                                    class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold border"></span>
+                            </div>
+                            <p class="text-gray-700 dark:text-gray-200 leading-relaxed font-medium" id="explanationText"
+                                style="font-size:0.975rem;line-height:1.75;"></p>
+
+                            <!-- Breakdown table -->
+                            <div id="breakdownTable"
+                                class="mt-5 pt-4 border-t border-white/10 dark:border-white/10 hidden">
+                                <p
+                                    class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 font-semibold">
+                                    Detected Signal Breakdown</p>
+                                <div id="breakdownRows" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════
+                 BOTTOM CTA
+            ════════════════════════════════════════════ -->
+            <div class="mt-6 cta-card" id="bottomCTA"
+                style="opacity:0;transform:translateY(16px);transition:opacity 0.5s ease,transform 0.5s ease;">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="cta-icon-wrap">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">Want to check another claim?</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Paste a new text, URL, or article
+                                to analyze instantly.</p>
+                        </div>
+                    </div>
+                    <a href="index.html" class="cta-analyze-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Analyze Another Article
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer
+        class="w-full border-t border-gray-200 dark:border-white/5 py-6 mt-auto bg-white/50 dark:bg-darkBg/50 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 text-center text-xs text-gray-500">
+            <p>Results generated by TruthGuard AI models tracking specific patterns relevant to Bangladesh media
+                context. Not a substitute for human critical thinking.</p>
+        </div>
+    </footer>
+
+    <div id="copyToast"
+        class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 rounded-xl font-medium text-sm shadow-xl flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // ── THEME ──────────────────────────────────────────────
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const htmlEl = document.documentElement;
+        function applyTheme(isDark) {
+            if (isDark) { htmlEl.classList.add('dark'); document.body.style.backgroundColor = '#0A0A0F'; }
+            else { htmlEl.classList.remove('dark'); document.body.style.backgroundColor = '#F3F0FF'; }
+        }
+        applyTheme(localStorage.getItem('theme') !== 'light');
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = htmlEl.classList.contains('dark');
+            applyTheme(!isDark); localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+        });
+
+        // ── LOAD DATA ──────────────────────────────────────────
+        const rawData = localStorage.getItem('truthguard_emotion_result');
+        if (!rawData) { window.location.href = 'index.html'; }
+        const data = JSON.parse(rawData);
+
+        const mainRaw = localStorage.getItem('truthguard_result');
+        let articleText = '';
+        try {
+            const mainResult = JSON.parse(mainRaw);
+            articleText = mainResult?.details?.articleText || mainResult?.inputContent || '';
+        } catch (e) { }
+
+        // ── COLOR MAP ──────────────────────────────────────────
+        const COLOR_HEX = {
+            red: '#EF4444', blue: '#3B82F6', green: '#10B981',
+            yellow: '#EAB308', purple: '#A855F7', orange: '#F97316', gray: '#9CA3AF'
+        };
+
+        const EMOTION_META = {
+            fear: { emoji: '😨', label: 'Fear', labelBn: 'ভয়', color: 'purple' },
+            anger: { emoji: '😠', label: 'Anger', labelBn: 'ক্রোধ', color: 'red' },
+            sadness: { emoji: '😢', label: 'Sadness', labelBn: 'দুঃখ', color: 'blue' },
+            joy: { emoji: '😄', label: 'Joy', labelBn: 'আনন্দ', color: 'green' },
+            excitement: { emoji: '🔥', label: 'Excitement', labelBn: 'উত্তেজনা', color: 'orange' },
+            surprise: { emoji: '😲', label: 'Surprise', labelBn: 'বিস্ময়', color: 'yellow' },
+            disgust: { emoji: '😒', label: 'Disgust', labelBn: 'বিরক্তি', color: 'gray' },
+            neutral: { emoji: '😐', label: 'Neutral', labelBn: 'নিরপেক্ষ', color: 'gray' },
+        };
+
+        function buildExplanation(data) {
+            const emotion = data.dominant_emotion || 'neutral';
+            const meta = EMOTION_META[emotion] || EMOTION_META.neutral;
+            const intensity = data.intensity || 0;
+            const scores = data.emotion_scores || {};
+            const totalSignals = Object.values(scores).reduce((a, b) => a + b, 0);
+            const intensityLabel = intensity >= 70 ? 'very high' : intensity >= 40 ? 'moderate' : intensity > 0 ? 'low' : 'no detectable';
+
+            let explanation = `The analyzed content shows a dominant emotional tone of ${meta.label} (${meta.labelBn}) with ${intensityLabel} intensity (${intensity}/100). `;
+
+            if (totalSignals > 0) {
+                const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+                const topTwo = sorted.slice(0, 2).map(([e]) => (EMOTION_META[e] || EMOTION_META.neutral).label);
+                if (topTwo.length > 1) {
+                    explanation += `The content carries a mix of ${topTwo[0]} and ${topTwo[1]} signals, with ${totalSignals} emotional trigger word${totalSignals > 1 ? 's' : ''} detected in total. `;
+                } else {
+                    explanation += `${totalSignals} emotional trigger word${totalSignals > 1 ? 's' : ''} detected. `;
+                }
+            } else {
+                explanation += `No strong emotional trigger words were detected, suggesting a neutral or factual tone. `;
+            }
+
+            if (emotion === 'fear' || emotion === 'anger') {
+                explanation += `High ${meta.label.toLowerCase()} signals in news content can indicate sensationalist framing or genuine crisis reporting — cross-check with the authenticity score.`;
+            } else if (emotion === 'joy' || emotion === 'excitement') {
+                explanation += `Positive emotional framing is common in celebratory or promotional content. Consider whether the tone matches the subject matter.`;
+            } else if (emotion === 'sadness') {
+                explanation += `Sadness-heavy content often reflects reporting on loss, poverty, or tragedy. This is common in legitimate journalism covering difficult topics.`;
+            } else if (emotion === 'neutral') {
+                explanation += `Neutral tone is generally associated with objective, fact-based reporting.`;
+            } else {
+                explanation += `Review the detected signals below to understand the emotional profile of this content.`;
+            }
+            return explanation;
+        }
+
+        // ── RENDER ─────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+            const emotion = data.dominant_emotion || 'neutral';
+            const meta = EMOTION_META[emotion] || EMOTION_META.neutral;
+            const hexColor = COLOR_HEX[data.color] || COLOR_HEX.gray;
+            const intensity = data.intensity || 0;
+            const scores = data.emotion_scores || {};
+
+            document.getElementById('analysisDate').textContent = new Date().toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const body = document.getElementById('articleBody');
+            if (articleText) {
+                body.innerHTML = articleText.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+            } else {
+                body.innerHTML = `<p class="text-gray-500 dark:text-gray-400 italic">Original article text not available. Emotion analysis was performed on the submitted content.</p>`;
+            }
+
+            // Dominant tag pill
+            const domTag = document.getElementById('dominantTag');
+            domTag.textContent = `${meta.emoji} ${meta.label}`;
+            domTag.style.color = hexColor;
+            domTag.style.borderColor = hexColor;
+            domTag.style.backgroundColor = `${hexColor}18`;
+            domTag.classList.remove('hidden');
+
+            // Score ring
+            const circumference = 2 * Math.PI * 45;
+            const circleEl = document.getElementById('scoreCircle');
+            circleEl.style.stroke = hexColor;
+            document.getElementById('scoreBgIndicator').style.backgroundColor = hexColor;
+
+            setTimeout(() => {
+                const filled = circumference - (intensity / 100) * circumference;
+                circleEl.style.strokeDasharray = `${circumference - filled}, ${circumference}`;
+
+                let start = null;
+                const scoreEl = document.getElementById('scoreValue');
+                const step = ts => {
+                    if (!start) start = ts;
+                    const prog = Math.min((ts - start) / 1500, 1);
+                    const ease = 1 - Math.pow(1 - prog, 4);
+                    scoreEl.textContent = Math.floor(ease * intensity);
+                    if (prog < 1) requestAnimationFrame(step);
+                    else scoreEl.textContent = intensity;
+                };
+                requestAnimationFrame(step);
+
+                const badge = document.getElementById('verdictBadge');
+                badge.textContent = `${meta.emoji} ${meta.label}`;
+                badge.style.color = hexColor;
+                badge.style.borderColor = hexColor;
+                badge.style.backgroundColor = `${hexColor}18`;
+
+                document.getElementById('labelBn').textContent = meta.labelBn;
+
+                // Emotion bars
+                const barsContainer = document.getElementById('emotionBars');
+                barsContainer.innerHTML = '';
+                const allEmotions = ['anger', 'fear', 'sadness', 'joy', 'excitement', 'surprise', 'disgust'];
+                const maxVal = Math.max(...allEmotions.map(e => scores[e] || 0), 1);
+                allEmotions.forEach(emo => {
+                    const m = EMOTION_META[emo];
+                    const val = scores[emo] || 0;
+                    const hex = COLOR_HEX[m.color] || COLOR_HEX.gray;
+                    const isDominant = emo === emotion;
+                    barsContainer.innerHTML += `
+                <div class="flex items-center gap-3">
+                    <span class="text-base w-6 text-center flex-shrink-0">${m.emoji}</span>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-medium ${isDominant ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}">${m.label}</span>
+                            <span class="text-xs font-bold" style="color:${hex}">${val}</span>
+                        </div>
+                        <div class="emo-bar-track">
+                            <div class="emo-bar-fill" id="bar-${emo}" style="background:${hex};width:0%"></div>
+                        </div>
+                    </div>
+                </div>`;
+                });
+
+                setTimeout(() => {
+                    allEmotions.forEach(emo => {
+                        const val = scores[emo] || 0;
+                        const pct = Math.round((val / maxVal) * 100);
+                        const el = document.getElementById(`bar-${emo}`);
+                        if (el) el.style.width = `${pct}%`;
+                    });
+                }, 200);
+
+                // Reveal card action buttons
+                document.getElementById('cardActionButtons').style.opacity = '1';
+
+                // Bottom CTA slide-in
+                setTimeout(() => {
+                    const cta = document.getElementById('bottomCTA');
+                    cta.style.opacity = '1';
+                    cta.style.transform = 'translateY(0)';
+                }, 800);
+
+            }, 300);
+
+            // AI Explanation card
+            const explanationText = buildExplanation(data);
+            document.getElementById('explanationText').textContent = explanationText;
+
+            const bigBadge = document.getElementById('emotionBadgeLarge');
+            bigBadge.textContent = `${meta.emoji} ${meta.label}`;
+            bigBadge.style.color = hexColor;
+            bigBadge.style.borderColor = hexColor;
+            bigBadge.style.backgroundColor = `${hexColor}18`;
+            bigBadge.classList.remove('hidden');
+
+            document.getElementById('explanationCard').style.borderColor = `${hexColor}50`;
+
+            const totalSignals = Object.values(scores).reduce((a, b) => a + b, 0);
+            if (totalSignals > 0) {
+                const table = document.getElementById('breakdownTable');
+                const rows = document.getElementById('breakdownRows');
+                table.classList.remove('hidden');
+                Object.entries(scores).sort((a, b) => b[1] - a[1]).forEach(([emo, count]) => {
+                    const m = EMOTION_META[emo] || EMOTION_META.neutral;
+                    const hex = COLOR_HEX[m.color] || COLOR_HEX.gray;
+                    rows.innerHTML += `
+                <div class="flex items-center justify-between py-1.5 border-b border-white/5 dark:border-white/5 last:border-0">
+                    <span class="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                        <span>${m.emoji}</span> ${m.label} <span class="text-xs text-gray-500">(${m.labelBn})</span>
+                    </span>
+                    <span class="text-sm font-bold" style="color:${hex}">${count} signal${count !== 1 ? 's' : ''}</span>
+                </div>`;
+                });
+            }
+
+            document.getElementById('explanationSection').style.display = 'block';
+        });
+
+        // ── COPY ───────────────────────────────────────────────
+        function copyResult() {
+            const emotion = data.dominant_emotion || 'neutral';
+            const meta = EMOTION_META[emotion] || EMOTION_META.neutral;
+            const scores = data.emotion_scores || {};
+            const scoreLines = Object.entries(scores).map(([e, v]) => `  • ${(EMOTION_META[e] || EMOTION_META.neutral).label}: ${v} signal${v !== 1 ? 's' : ''}`).join('\n');
+            const text = `TruthGuard — Emotion Analysis Result
+──────────────────────────────────────
+Dominant Emotion : ${meta.emoji} ${meta.label} (${meta.labelBn})
+Intensity        : ${data.intensity}/100
+Date             : ${document.getElementById('analysisDate').textContent}
+
+${scoreLines ? 'Signal Breakdown:\n' + scoreLines : 'No emotional signals detected.'}
+
+${buildExplanation(data)}
+
+Generated by TruthGuard`;
+            navigator.clipboard.writeText(text).then(() => showToast()).catch(() => alert('Could not copy — please copy manually.'));
+        }
+
+        // ── PDF ─────────────────────────────────────────────────
+        function downloadPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                const emotion = data.dominant_emotion || 'neutral';
+                const meta = EMOTION_META[emotion] || EMOTION_META.neutral;
+                const scores = data.emotion_scores || {};
+                let y = 20;
+
+                doc.setFillColor(124, 58, 237);
+                doc.rect(0, 0, pageW, 16, 'F');
+                doc.setTextColor(255, 255, 255); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+                doc.text('TruthGuard — Emotion Analysis Report', 14, 11);
+                doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+                doc.text(`Generated: ${document.getElementById('analysisDate').textContent}`, pageW - 14, 11, { align: 'right' });
+
+                y = 28; doc.setTextColor(30, 30, 30);
+                doc.setFontSize(20); doc.setFont('helvetica', 'bold');
+                doc.text(`${meta.label}`, 14, y);
+                doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+                doc.text(`Intensity: ${data.intensity}/100  |  Bengali: ${meta.labelBn}`, 14, y + 9);
+                y += 20;
+
+                doc.setDrawColor(200, 200, 200); doc.line(14, y, pageW - 14, y); y += 8;
+
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+                doc.text('Analysis Summary', 14, y); y += 7;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                const expLines = doc.splitTextToSize(buildExplanation(data), pageW - 28);
+                doc.text(expLines, 14, y); y += expLines.length * 5 + 6;
+
+                if (Object.keys(scores).length > 0) {
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+                    doc.text('Signal Breakdown', 14, y); y += 7;
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+                    Object.entries(scores).sort((a, b) => b[1] - a[1]).forEach(([emo, val]) => {
+                        const m = EMOTION_META[emo] || EMOTION_META.neutral;
+                        doc.text(`• ${m.label} (${m.labelBn}): ${val} signal${val !== 1 ? 's' : ''}`, 16, y); y += 5.5;
+                    });
+                }
+
+                doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+                doc.text('TruthGuard — AI-powered analysis for Bangladesh media', 14, 287);
+                doc.text('Page 1', pageW - 14, 287, { align: 'right' });
+                doc.save(`TruthGuard_Emotion_${Date.now()}.pdf`);
+            } catch (e) {
+                console.error('PDF error:', e);
+                alert('Could not generate PDF. Please try again.');
+            }
+        }
+
+        // ── SHARE ──────────────────────────────────────────────
+        function shareResult() {
+            const emotion = data.dominant_emotion || 'neutral';
+            const meta = EMOTION_META[emotion] || EMOTION_META.neutral;
+            const text = `I analyzed the emotional tone of an article with TruthGuard — Dominant emotion: ${meta.emoji} ${meta.label} (Intensity: ${data.intensity}/100)`;
+            if (navigator.share) {
+                navigator.share({ title: 'TruthGuard Emotion Analysis', text, url: window.location.href }).catch(() => { });
+            } else {
+                navigator.clipboard.writeText(text).then(() => showToast());
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+
+</html>
