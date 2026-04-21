@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TruthGuard - Analysis Results</title>
+    <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -103,7 +104,6 @@
             color: transparent;
         }
 
-        /* ── Navbar ── */
         .nav-glass {
             background: rgba(10, 10, 15, 0.8);
             backdrop-filter: blur(16px);
@@ -129,22 +129,12 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
-        .progress-bar {
-            transition: width 1.5s ease-out;
-        }
-
-        .score-ring {
-            transition: stroke-dasharray 1.5s ease-out;
-        }
+        .progress-bar { transition: width 1.5s ease-out; }
+        .score-ring   { transition: stroke-dasharray 1.5s ease-out; }
 
         .metric-card {
             background: rgba(255, 255, 255, 0.05);
@@ -156,13 +146,9 @@
             border: 1px solid rgba(124, 58, 237, 0.1);
         }
 
-        .progress-track {
-            background: #0A0A0F;
-        }
+        .progress-track { background: #0A0A0F; }
 
-        html:not(.dark) .progress-track {
-            background: rgba(124, 58, 237, 0.08);
-        }
+        html:not(.dark) .progress-track { background: rgba(124, 58, 237, 0.08); }
 
         .accordion-item {
             background: rgba(255, 255, 255, 0.05);
@@ -184,7 +170,6 @@
             border-bottom: 1px solid rgba(124, 58, 237, 0.1);
         }
 
-        /* ── Nav New Analysis button ── */
         .nav-new-analysis-btn {
             display: flex;
             align-items: center;
@@ -213,7 +198,6 @@
             box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
         }
 
-        /* ── Inline New Analysis (inside card header) ── */
         .inline-new-analysis-btn {
             display: flex;
             align-items: center;
@@ -242,7 +226,6 @@
             box-shadow: 0 3px 10px rgba(124, 58, 237, 0.2);
         }
 
-        /* ── Card action buttons (Copy / PDF / Share) ── */
         .card-action-btn {
             display: flex;
             align-items: center;
@@ -277,7 +260,6 @@
             color: #374151;
         }
 
-        /* ── Bottom CTA card ── */
         .cta-card {
             position: relative;
             border-radius: 1.25rem;
@@ -296,7 +278,6 @@
             box-shadow: 0 4px 24px rgba(124, 58, 237, 0.08);
         }
 
-        /* gradient border glow on CTA */
         .cta-card::before {
             content: '';
             position: absolute;
@@ -318,7 +299,6 @@
             pointer-events: none;
         }
 
-        /* ── Analyze Another Article button ── */
         .cta-analyze-btn {
             display: inline-flex;
             align-items: center;
@@ -352,15 +332,9 @@
             box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45), 0 4px 12px rgba(6, 182, 212, 0.25);
         }
 
-        .cta-analyze-btn:hover::before {
-            opacity: 1;
-        }
+        .cta-analyze-btn:hover::before { opacity: 1; }
+        .cta-analyze-btn:active { transform: translateY(0); }
 
-        .cta-analyze-btn:active {
-            transform: translateY(0);
-        }
-
-        /* ── CTA icon pulse ── */
         .cta-icon-wrap {
             width: 42px;
             height: 42px;
@@ -373,11 +347,8 @@
             flex-shrink: 0;
         }
 
-        html:not(.dark) .cta-icon-wrap {
-            background: rgba(124, 58, 237, 0.1);
-        }
+        html:not(.dark) .cta-icon-wrap { background: rgba(124, 58, 237, 0.1); }
 
-        /* ── AI Explanation Highlight Card ── */
         .ai-explanation-card {
             position: relative;
             overflow: hidden;
@@ -424,24 +395,12 @@
             font-size: 0.975rem;
         }
 
-        .dark .explanation-text-highlight {
-            color: #e2e8f0;
-        }
-
-        html:not(.dark) .explanation-text-highlight {
-            color: #1e293b;
-        }
+        .dark .explanation-text-highlight  { color: #e2e8f0; }
+        html:not(.dark) .explanation-text-highlight { color: #1e293b; }
 
         @keyframes pulse-dot {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
         }
 
         .live-dot {
@@ -493,7 +452,6 @@
             border: 1px solid rgba(124, 58, 237, 0.2);
         }
 
-        /* ── Key Findings collapsible ── */
         .findings-toggle-btn {
             width: 100%;
             display: flex;
@@ -512,12 +470,25 @@
             border-color: rgba(124, 58, 237, 0.1);
         }
 
-        .findings-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.07);
+        .findings-toggle-btn:hover { background: rgba(255, 255, 255, 0.07); }
+
+        html:not(.dark) .findings-toggle-btn:hover { background: rgba(124, 58, 237, 0.08); }
+
+        /* ── Category row in score card ── */
+        .score-category-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            background: rgba(124, 58, 237, 0.07);
         }
 
-        html:not(.dark) .findings-toggle-btn:hover {
-            background: rgba(124, 58, 237, 0.08);
+        html:not(.dark) .score-category-row {
+            background: rgba(124, 58, 237, 0.06);
+            border-color: rgba(124, 58, 237, 0.18);
         }
     </style>
 </head>
@@ -532,47 +503,30 @@
         <div class="glow-danger" id="dangerGlow" style="opacity: 0; transition: opacity 1s;"></div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         NAVBAR — Clean & Minimal: Logo | New Analysis | Theme
-    ════════════════════════════════════════════════════════════════ -->
+    <!-- NAVBAR -->
     <nav class="sticky top-0 w-full z-50 nav-glass transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-18 py-4 flex items-center justify-between">
-
-            <!-- Logo -->
             <a href="index.html" class="flex items-center space-x-3 cursor-pointer group">
-                <div
-                    class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                 </div>
-                <span
-                    class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300">TruthGuard</span>
+                <span class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-300">TruthGuard</span>
             </a>
-
-            <!-- Right side: New Analysis + Theme toggle only -->
             <div class="flex items-center gap-3">
                 <a href="index.html" class="nav-new-analysis-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                     </svg>
                     New Analysis
                 </a>
-
-                <button id="themeToggle"
-                    class="p-2 rounded-full bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/10 transition-colors focus:outline-none shadow-sm">
-                    <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                <button id="themeToggle" class="p-2 rounded-full bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-white/10 transition-colors focus:outline-none shadow-sm">
+                    <svg id="sunIcon" class="hidden dark:block w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-                    <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <svg id="moonIcon" class="block dark:hidden w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                 </button>
             </div>
@@ -582,142 +536,109 @@
     <main class="flex-grow flex flex-col items-center px-6 pt-10 pb-24 w-full">
         <div class="max-w-7xl w-full">
 
-            <!-- Page header -->
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
                 <div>
                     <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
                         <span id="analysisDate">Analyzing...</span>
                         <span>•</span>
-                        <span
-                            class="bg-gray-200 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300">URL
-                            Analysis</span>
+                        <span class="bg-gray-200 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300">URL Analysis</span>
                     </div>
-                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight"
-                        id="articleTitle">
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight" id="articleTitle">
                         <div class="skeleton h-10 w-3/4 rounded mb-2"></div>
                     </h1>
-                    <a href="#"
-                        class="text-primary hover:text-primary/80 transition-colors text-sm flex items-center space-x-1"
-                        id="articleSource" style="display:none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    <a href="#" class="text-primary hover:text-primary/80 transition-colors text-sm flex items-center space-x-1" id="articleSource" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                         <span id="sourceUrlTag">example-news.com/article...</span>
                     </a>
                 </div>
             </div>
 
-            <!-- ═══════════════════════════════════════
-                 MAIN GRID: Score left | Content right
-            ════════════════════════════════════════════ -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 <!-- LEFT — Score + Metrics + Key Findings -->
                 <div class="lg:col-span-1 space-y-6">
-
-                    <!-- Score Card -->
                     <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
-                        <div id="scoreBgIndicator"
-                            class="absolute top-0 left-0 w-full h-1 bg-gray-300 dark:bg-gray-600 transition-colors duration-1000">
+                        <div id="scoreBgIndicator" class="absolute top-0 left-0 w-full h-1 bg-gray-300 dark:bg-gray-600 transition-colors duration-1000"></div>
+
+                        <!-- ── Authenticity Score heading ── -->
+                        <div class="mb-6">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Authenticity Score</h2>
+                            <!-- Category row — hidden until renderResults() fires -->
+                            <div id="scoreCategoryBadge" class="score-category-row hidden">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</span>
+                                <span class="text-gray-400 dark:text-gray-500 text-xs">•</span>
+                                <span id="scoreCategoryLabel" class="text-base font-extrabold tracking-wide"></span>
+                            </div>
                         </div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Authenticity Score</h2>
+
                         <div class="flex flex-col items-center justify-center mb-6">
                             <div class="relative w-40 h-40">
                                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(128,128,128,0.1)"
-                                        stroke-width="8" />
-                                    <circle id="scoreCircle" cx="50" cy="50" r="45" fill="none" stroke="#EF4444"
-                                        stroke-width="8" stroke-linecap="round" stroke-dasharray="0, 283"
-                                        class="score-ring" />
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(128,128,128,0.1)" stroke-width="8" />
+                                    <circle id="scoreCircle" cx="50" cy="50" r="45" fill="none" stroke="#EF4444" stroke-width="8" stroke-linecap="round" stroke-dasharray="0, 283" class="score-ring" />
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span class="text-4xl font-black text-gray-900 dark:text-white"
-                                        id="scoreValue">--</span>
-                                    <span
-                                        class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Out
-                                        of 100</span>
+                                    <span class="text-4xl font-black text-gray-900 dark:text-white" id="scoreValue">--</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Out of 100</span>
                                 </div>
                             </div>
-                            <div id="verdictBadge"
-                                class="mt-4 px-4 py-1.5 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 font-bold text-sm skeleton w-32 h-8">
-                            </div>
+                            <div id="verdictBadge" class="mt-4 px-4 py-1.5 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 font-bold text-sm skeleton w-32 h-8"></div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mt-6 border-t border-gray-200 dark:border-white/10 pt-6">
                             <div class="metric-card p-3 rounded-xl">
-                                <p
-                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                     Text Analysis
                                 </p>
                                 <div class="flex items-end justify-between mb-1.5">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
-                                            id="textScore">--</span><span
-                                            class="text-xs text-gray-400 font-normal">/40</span></span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span id="textScore">--</span><span class="text-xs text-gray-400 font-normal">/40</span></span>
                                 </div>
                                 <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
                                     <div id="textBar" class="h-full bg-primary progress-bar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <div class="metric-card p-3 rounded-xl">
-                                <p
-                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                                     </svg>
                                     Template Check
                                 </p>
                                 <div class="flex items-end justify-between mb-1.5">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
-                                            id="templateScore">--</span><span
-                                            class="text-xs text-gray-400 font-normal">/25</span></span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span id="templateScore">--</span><span class="text-xs text-gray-400 font-normal">/25</span></span>
                                 </div>
                                 <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
-                                    <div id="templateBar" class="h-full bg-warning progress-bar" style="width: 0%">
-                                    </div>
+                                    <div id="templateBar" class="h-full bg-warning progress-bar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <div class="metric-card p-3 rounded-xl">
-                                <p
-                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                                     </svg>
                                     Domain Age
                                 </p>
                                 <div class="flex items-end justify-between mb-1.5">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
-                                            id="domainScore">--</span><span
-                                            class="text-xs text-gray-400 font-normal">/20</span></span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span id="domainScore">--</span><span class="text-xs text-gray-400 font-normal">/20</span></span>
                                 </div>
                                 <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
                                     <div id="domainBar" class="h-full bg-danger progress-bar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <div class="metric-card p-3 rounded-xl">
-                                <p
-                                    class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                     Headline Match
                                 </p>
                                 <div class="flex items-end justify-between mb-1.5">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span
-                                            id="headlineScore">--</span><span
-                                            class="text-xs text-gray-400 font-normal">/15</span></span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white"><span id="headlineScore">--</span><span class="text-xs text-gray-400 font-normal">/15</span></span>
                                 </div>
                                 <div class="w-full progress-track h-1.5 rounded-full overflow-hidden">
                                     <div id="headlineBar" class="h-full bg-danger progress-bar" style="width: 0%"></div>
@@ -726,22 +647,17 @@
                         </div>
                     </div>
 
-                    <!-- Key Findings — collapsible -->
+                    <!-- Key Findings -->
                     <div class="glass-card rounded-2xl overflow-hidden">
                         <button class="findings-toggle-btn" onclick="toggleFindings(this)">
                             <span class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                                 Key Findings
                             </span>
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-gray-400 findings-chevron transition-transform duration-300 rotate-180"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 findings-chevron transition-transform duration-300 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
                         <div class="findings-body px-5 pb-5 pt-4">
@@ -754,79 +670,53 @@
                     </div>
                 </div>
 
-                <!-- RIGHT — Analyzed Content with inline actions -->
+                <!-- RIGHT — Analyzed Content -->
                 <div class="lg:col-span-2 space-y-6 flex flex-col">
                     <div class="glass-card rounded-2xl p-1 flex-grow flex flex-col">
-
-                        <!-- Card top bar: Title | + New Analysis | Copy | PDF | Share -->
                         <div class="content-topbar px-5 py-3.5 rounded-t-2xl">
-                            <!-- Row 1: Title + New Analysis -->
                             <div class="flex items-center justify-between gap-3 mb-3">
-                                <h2
-                                    class="text-base font-semibold text-gray-900 dark:text-white flex items-center shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary"
-                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                                     </svg>
                                     Analyzed Content
                                 </h2>
                                 <a href="index.html" class="inline-new-analysis-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 4v16m8-8H4" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                                     </svg>
                                     New Analysis
                                 </a>
                             </div>
-
-                            <!-- Row 2: Legend + Action buttons -->
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <div class="flex gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                    <span class="flex items-center"><span
-                                            class="w-2.5 h-2.5 rounded bg-danger/50 border border-danger mr-1.5"></span>High
-                                        Risk</span>
-                                    <span class="flex items-center"><span
-                                            class="w-2.5 h-2.5 rounded bg-warning/50 border border-warning mr-1.5"></span>Unverified</span>
+                                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-danger/50 border border-danger mr-1.5"></span>High Risk</span>
+                                    <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-warning/50 border border-warning mr-1.5"></span>Unverified</span>
                                 </div>
-                                <!-- Copy / PDF / Share — contextual, inside the card -->
-                                <div class="flex items-center gap-2" id="cardActionButtons"
-                                    style="opacity:0; transition: opacity 0.4s;">
+                                <div class="flex items-center gap-2" id="cardActionButtons" style="opacity:0; transition: opacity 0.4s;">
                                     <button onclick="copyResultToClipboard()" class="card-action-btn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                                         </svg>
                                         Copy
                                     </button>
                                     <button onclick="downloadPDF()" class="card-action-btn">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
                                         PDF
                                     </button>
-                                    <button onclick="shareResult()" class="card-action-btn"
-                                        style="border-color: rgba(124,58,237,0.4); color: #7C3AED; background: rgba(124,58,237,0.08);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                    <button onclick="shareResult()" class="card-action-btn" style="border-color: rgba(124,58,237,0.4); color: #7C3AED; background: rgba(124,58,237,0.08);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                                         </svg>
                                         Share
                                     </button>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Article body -->
                         <div class="p-6 md:p-8 overflow-y-auto" style="max-height: 500px;">
-                            <div id="articleBody"
-                                class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 font-medium"
-                                style="font-size: 1.05rem;">
+                            <div id="articleBody" class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 font-medium" style="font-size: 1.05rem;">
                                 <div class="skeleton h-4 w-full rounded mb-3"></div>
                                 <div class="skeleton h-4 w-11/12 rounded mb-3"></div>
                                 <div class="skeleton h-4 w-full rounded mb-3"></div>
@@ -840,41 +730,30 @@
                 </div>
             </div>
 
-            <!-- AI Explanation highlight card -->
+            <!-- AI Explanation -->
             <div class="mt-8" id="aiExplanationSection" style="display:none;">
                 <div class="ai-explanation-card" id="aiExplanationCard">
                     <div class="flex items-start space-x-4">
                         <div class="ai-explanation-icon-ring mt-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                             </svg>
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center space-x-2 mb-3">
                                 <span class="live-dot"></span>
-                                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">AI
-                                    Verdict Explanation</h3>
-                                <span id="categoryBadge"
-                                    class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold border"></span>
+                                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">AI Verdict Explanation</h3>
+                                <span id="categoryBadge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold border"></span>
                             </div>
-                            <p class="explanation-text-highlight font-medium" id="aiExplanationText">Loading
-                                explanation...</p>
-                            <div id="contradictionAlert"
-                                class="hidden mt-4 flex items-start space-x-2 p-3 rounded-lg bg-danger/10 border border-danger/30">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-danger flex-shrink-0 mt-0.5"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            <p class="explanation-text-highlight font-medium" id="aiExplanationText">Loading explanation...</p>
+                            <div id="contradictionAlert" class="hidden mt-4 flex items-start space-x-2 p-3 rounded-lg bg-danger/10 border border-danger/30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-danger flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 <p class="text-xs text-danger font-medium leading-relaxed" id="contradictionText"></p>
                             </div>
-                            <div id="mainClaimRow"
-                                class="hidden mt-4 pt-4 border-t border-white/10 dark:border-white/10">
-                                <p
-                                    class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 font-semibold">
-                                    Main Claim Verified</p>
+                            <div id="mainClaimRow" class="hidden mt-4 pt-4 border-t border-white/10 dark:border-white/10">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 font-semibold">Main Claim Verified</p>
                                 <p class="text-sm text-gray-700 dark:text-gray-300 italic" id="mainClaimText"></p>
                             </div>
                         </div>
@@ -888,118 +767,81 @@
                 <div class="space-y-4">
 
                     <div class="accordion-item rounded-xl overflow-hidden">
-                        <button
-                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
-                            onclick="toggleAccordion(this)">
+                        <button class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none" onclick="toggleAccordion(this)">
                             <span class="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary mr-1.5" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                 </svg>
                                 AI Verdict Explanation
                             </span>
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-gray-400 chevron transition-transform rotate-180" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 chevron transition-transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div class="px-6 pb-5 text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
-                            id="accordionGroq">
+                        <div class="px-6 pb-5 text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4" id="accordionGroq">
                             Loading AI explanation...
                         </div>
                     </div>
 
                     <div class="accordion-item rounded-xl overflow-hidden">
-                        <button
-                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
-                            onclick="toggleAccordion(this)">
+                        <button class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none" onclick="toggleAccordion(this)">
                             <span class="font-semibold text-gray-900 dark:text-white">Content Analysis</span>
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
-                            id="accordionContentAnalysis">
+                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4" id="accordionContentAnalysis">
                             Loading analysis details...
                         </div>
                     </div>
 
                     <div class="accordion-item rounded-xl overflow-hidden">
-                        <button
-                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
-                            onclick="toggleAccordion(this)">
+                        <button class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none" onclick="toggleAccordion(this)">
                             <span class="font-semibold text-gray-900 dark:text-white">Template Analysis</span>
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div
-                            class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4">
-                            Structural template check based on clickbait patterns and layout similarity to known fake
-                            news sites.
+                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4">
+                            Structural template check based on clickbait patterns and layout similarity to known fake news sites.
                         </div>
                     </div>
 
                     <div class="accordion-item rounded-xl overflow-hidden">
-                        <button
-                            class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none"
-                            onclick="toggleAccordion(this)">
+                        <button class="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-white/5 transition-colors focus:outline-none" onclick="toggleAccordion(this)">
                             <span class="font-semibold text-gray-900 dark:text-white">Domain Analysis</span>
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 chevron transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4"
-                            id="accordionDomain">
+                        <div class="px-6 pb-4 hidden text-sm text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-white/10 pt-4" id="accordionDomain">
                             Domain age and HTTPS security analysis.
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ═══════════════════════════════════════
-                 BOTTOM CTA — "Want to check another claim?"
-            ════════════════════════════════════════════ -->
-            <div class="mt-6 cta-card" id="bottomCTA"
-                style="opacity:0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease;">
+            <!-- Bottom CTA -->
+            <div class="mt-6 cta-card" id="bottomCTA" style="opacity:0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease;">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
                     <div class="flex items-center gap-4">
                         <div class="cta-icon-wrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m1.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                             </svg>
                         </div>
                         <div>
                             <p class="text-lg font-bold text-gray-900 dark:text-white">Want to check another claim?</p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Paste a new text, URL, or article
-                                to analyze instantly.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Paste a new text, URL, or article to analyze instantly.</p>
                         </div>
                     </div>
                     <a href="index.html" class="cta-analyze-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         Analyze Another Article
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                     </a>
                 </div>
@@ -1008,11 +850,9 @@
         </div>
     </main>
 
-    <footer
-        class="w-full border-t border-gray-200 dark:border-white/5 py-6 mt-auto bg-white/50 dark:bg-darkBg/50 backdrop-blur-sm">
+    <footer class="w-full border-t border-gray-200 dark:border-white/5 py-6 mt-auto bg-white/50 dark:bg-darkBg/50 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto px-6 text-center text-xs text-gray-500">
-            <p>Results generated by TruthGuard AI models tracking specific patterns relevant to Bangladesh media
-                context. Not a substitute for human critical thinking.</p>
+            <p>Results generated by TruthGuard AI models tracking specific patterns relevant to Bangladesh media context. Not a substitute for human critical thinking.</p>
         </div>
     </footer>
 
@@ -1026,10 +866,8 @@
         </div>
     </div>
 
-    <div id="copyToast"
-        class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 rounded-xl font-medium text-sm shadow-xl flex items-center space-x-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success dark:text-success" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor">
+    <div id="copyToast" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 rounded-xl font-medium text-sm shadow-xl flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success dark:text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
         </svg>
         <span>Copied to clipboard!</span>
@@ -1038,11 +876,13 @@
     <script>
         // ─── THEME ───────────────────────────────────────────────────
         const themeToggleBtn = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
+        const htmlElement    = document.documentElement;
+
         function applyTheme(isDark) {
-            if (isDark) { htmlElement.classList.add('dark'); document.body.style.backgroundColor = '#0A0A0F'; }
-            else { htmlElement.classList.remove('dark'); document.body.style.backgroundColor = '#F3F0FF'; }
+            if (isDark) { htmlElement.classList.add('dark');    document.body.style.backgroundColor = '#0A0A0F'; }
+            else        { htmlElement.classList.remove('dark'); document.body.style.backgroundColor = '#F3F0FF'; }
         }
+
         applyTheme(localStorage.getItem('theme') !== 'light');
         themeToggleBtn.addEventListener('click', () => {
             const isDark = htmlElement.classList.contains('dark');
@@ -1060,7 +900,7 @@
 
         // ─── KEY FINDINGS TOGGLE ─────────────────────────────────────
         function toggleFindings(btn) {
-            const body = btn.nextElementSibling;
+            const body    = btn.nextElementSibling;
             const chevron = btn.querySelector('.findings-chevron');
             body.classList.toggle('hidden');
             chevron.classList.toggle('rotate-180');
@@ -1079,86 +919,109 @@
 
         let mockData = {};
 
+        // ============================================================
+        // 📦 CATEGORY META — must match backend CATEGORIES keys exactly
+        // ============================================================
         const CATEGORY_META = {
-            POLITICS: { label: '🏛️ Politics', color: 'text-purple-400 border-purple-400/40 bg-purple-400/10' },
-            HEALTH: { label: '🏥 Health', color: 'text-green-400  border-green-400/40  bg-green-400/10' },
-            SPORTS: { label: '⚽ Sports', color: 'text-blue-400   border-blue-400/40   bg-blue-400/10' },
-            ECONOMY: { label: '💰 Economy', color: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
-            WORLD: { label: '🌍 World News', color: 'text-cyan-400   border-cyan-400/40   bg-cyan-400/10' },
-            GENERAL: { label: '📰 General', color: 'text-gray-400   border-gray-400/40   bg-gray-400/10' },
+            POLITICS:      { label: '🏛️ Politics',      color: 'text-purple-400 border-purple-400/40 bg-purple-400/10' },
+            HEALTH:        { label: '🏥 Health',         color: 'text-green-400  border-green-400/40  bg-green-400/10'  },
+            SPORTS:        { label: '⚽ Sports',         color: 'text-blue-400   border-blue-400/40   bg-blue-400/10'   },
+            ECONOMY:       { label: '💰 Economy',        color: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
+            WORLD:         { label: '🌍 World News',     color: 'text-cyan-400   border-cyan-400/40   bg-cyan-400/10'   },
+            ENTERTAINMENT: { label: '🎬 Entertainment',  color: 'text-pink-400   border-pink-400/40   bg-pink-400/10'   },
+            GENERAL:       { label: '📰 General',        color: 'text-gray-400   border-gray-400/40   bg-gray-400/10'   },
         };
 
+        // ============================================================
+        // 🔑 SINGLE SOURCE OF TRUTH FOR VERDICT DISPLAY
+        // Backend verdicts: REAL | LIKELY REAL | SUSPICIOUS | FAKE
+        // Frontend labels:  same — no remapping
+        // ============================================================
+        function getVerdictMeta(backendVerdict) {
+            switch ((backendVerdict || '').toUpperCase()) {
+                case 'REAL':
+                    return { label: 'REAL',        colorClass: 'bg-success',   colorHex: '#10B981', badgeClasses: 'bg-success/20   border-success/50   text-success'   };
+                case 'LIKELY REAL':
+                    return { label: 'LIKELY REAL', colorClass: 'bg-secondary', colorHex: '#06B6D4', badgeClasses: 'bg-secondary/20 border-secondary/50 text-secondary' };
+                case 'SUSPICIOUS':
+                    return { label: 'SUSPICIOUS',  colorClass: 'bg-warning',   colorHex: '#F59E0B', badgeClasses: 'bg-warning/20   border-warning/50   text-warning'   };
+                case 'FAKE':
+                default:
+                    return { label: 'FAKE',        colorClass: 'bg-danger',    colorHex: '#EF4444', badgeClasses: 'bg-danger/20    border-danger/50    text-danger'    };
+            }
+        }
+
         function buildMockData() {
+            const verdictMeta = getVerdictMeta(apiResult.verdict);
+
             let findingsArray = [];
             findingsArray.push({
-                type: apiResult.details.aiLabel === 'FAKE' ? 'danger' : 'warning',
+                type:  apiResult.verdict === 'FAKE' ? 'danger' : 'warning',
                 title: 'AI Linguistic Analysis',
-                desc: `Model detected language patterns consistent with ${apiResult.details.aiLabel || 'UNKNOWN'} content. Sentiment is mostly ${apiResult.details.sentiment || 'neutral'}.`
+                desc:  `Model detected language patterns consistent with ${apiResult.verdict || 'UNKNOWN'} content. Sentiment is mostly ${apiResult.details.sentiment || 'neutral'}.`
             });
             if (apiResult.inputType === 'url') {
                 findingsArray.push({
-                    type: apiResult.details.isHttps ? 'warning' : 'danger',
+                    type:  apiResult.details.isHttps ? 'warning' : 'danger',
                     title: 'Domain Security',
-                    desc: apiResult.details.isHttps ? 'Connection is secure (HTTPS).' : 'Insecure connection detected. Lacks SSL certificate.'
+                    desc:  apiResult.details.isHttps ? 'Connection is secure (HTTPS).' : 'Insecure connection detected. Lacks SSL certificate.'
                 });
-                if (apiResult.details.domainAge !== null) {
+                if (apiResult.details.domainAge !== null && apiResult.details.domainAge !== undefined) {
                     findingsArray.push({
-                        type: apiResult.details.domainAge > 365 ? 'warning' : 'danger',
+                        type:  apiResult.details.domainAge > 365 ? 'warning' : 'danger',
                         title: 'Domain Age',
-                        desc: `Domain is ${apiResult.details.domainAge} days old. ${apiResult.details.domainAge < 30 ? 'Newly registered domains are highly suspicious.' : 'Established domain.'}`
+                        desc:  `Domain is ${apiResult.details.domainAge} days old. ${apiResult.details.domainAge < 30 ? 'Newly registered domains are highly suspicious.' : 'Established domain.'}`
                     });
                 }
             }
 
             mockData = {
-                title: apiResult.inputType === 'url' ? 'Analysis of Provided URL' : 'Analysis of Provided Text',
-                source: apiResult.inputType === 'url' ? apiResult.inputContent : 'Direct Text Input',
-                dateAnalyzed: new Date(apiResult.createdAt || Date.now()).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                authenticityScore: Math.round(apiResult.totalScore || 0),
-                textAnalysisScore: Math.round(apiResult.textScore || 0),
-                templateCheckScore: Math.round(apiResult.templateScore || 0),
-                domainAgeScore: Math.round(apiResult.domainScore || 0),
-                headlineMatchScore: Math.round(apiResult.headlineScore || 0),
-                findings: findingsArray,
-                paragraphs: apiResult.details.articleText
-                    ? apiResult.details.articleText.split('\n').filter(p => p.trim() !== '')
-                    : ['No text could be extracted.'],
-                groqExplanation: apiResult.details.groqExplanation || 'No explanation available.',
-                category: apiResult.details.category || 'GENERAL',
-                mainClaim: apiResult.details.mainClaim || null,
-                contradictionFound: apiResult.details.contradictionFound || false,
+                title:               apiResult.inputType === 'url' ? 'Analysis of Provided URL' : 'Analysis of Provided Text',
+                source:              apiResult.inputType === 'url' ? apiResult.inputContent : 'Direct Text Input',
+                dateAnalyzed:        new Date(apiResult.createdAt || Date.now()).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                authenticityScore:   Math.round(apiResult.totalScore || 0),
+                backendVerdict:      apiResult.verdict || 'FAKE',
+                verdictMeta,
+                textAnalysisScore:   Math.round(apiResult.textScore     || 0),
+                templateCheckScore:  Math.round(apiResult.templateScore || 0),
+                domainAgeScore:      Math.round(apiResult.domainScore   || 0),
+                headlineMatchScore:  Math.round(apiResult.headlineScore || 0),
+                findings:            findingsArray,
+                paragraphs:          apiResult.details.articleText
+                                        ? apiResult.details.articleText.split('\n').filter(p => p.trim() !== '')
+                                        : ['No text could be extracted.'],
+                groqExplanation:     apiResult.details.groqExplanation  || 'No explanation available.',
+                category:            apiResult.details.category         || 'GENERAL',
+                mainClaim:           apiResult.details.mainClaim        || null,
+                contradictionFound:  apiResult.details.contradictionFound  || false,
                 contradictionDetail: apiResult.details.contradictionDetail || null,
-                aiLabel: apiResult.details.aiLabel || 'UNKNOWN',
-                sentiment: apiResult.details.sentiment || 'neutral',
-                clickbaitScore: apiResult.details.clickbaitScore || 0,
-                domainAge: apiResult.details.domainAge,
-                isHttps: apiResult.details.isHttps,
-                articleText: apiResult.details.articleText || apiResult.inputContent || ''
+                aiLabel:             apiResult.details.aiLabel          || 'UNKNOWN',
+                sentiment:           apiResult.details.sentiment        || 'neutral',
+                clickbaitScore:      apiResult.details.clickbaitScore   || 0,
+                domainAge:           apiResult.details.domainAge,
+                isHttps:             apiResult.details.isHttps,
+                articleText:         apiResult.details.articleText      || apiResult.inputContent || '',
             };
         }
 
         function renderAIExplanationCard() {
             const section = document.getElementById('aiExplanationSection');
-            const textEl = document.getElementById('aiExplanationText');
-            const card = document.getElementById('aiExplanationCard');
+            const textEl  = document.getElementById('aiExplanationText');
+            const card    = document.getElementById('aiExplanationCard');
             section.style.display = 'block';
-            textEl.textContent = mockData.groqExplanation;
+            textEl.textContent    = mockData.groqExplanation;
 
-            const score = mockData.authenticityScore;
-            if (score < 35) {
-                card.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.05) 100%)';
-            } else if (score < 55) {
-                card.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)';
-            } else if (score < 75) {
-                card.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.05) 100%)';
-            } else {
-                card.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.05) 100%)';
-            }
+            // Card background colour based on backend verdict
+            const v = mockData.backendVerdict.toUpperCase();
+            if      (v === 'FAKE')        card.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.05) 100%)';
+            else if (v === 'SUSPICIOUS')  card.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)';
+            else if (v === 'LIKELY REAL') card.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.05) 100%)';
+            else                          card.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.05) 100%)';
 
             const catMeta = CATEGORY_META[mockData.category] || CATEGORY_META['GENERAL'];
             const badgeEl = document.getElementById('categoryBadge');
             badgeEl.textContent = catMeta.label;
-            badgeEl.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold border ${catMeta.color}`;
+            badgeEl.className   = `px-2.5 py-0.5 rounded-full text-xs font-semibold border ${catMeta.color}`;
             badgeEl.classList.remove('hidden');
 
             if (mockData.contradictionFound && mockData.contradictionDetail) {
@@ -1175,8 +1038,8 @@
         }
 
         function renderResults() {
-            document.getElementById('analysisDate').innerText = `Analyzed on ${mockData.dateAnalyzed}`;
-            document.getElementById('articleTitle').innerHTML = mockData.title;
+            document.getElementById('analysisDate').innerText    = `Analyzed on ${mockData.dateAnalyzed}`;
+            document.getElementById('articleTitle').innerHTML    = mockData.title;
 
             const sourceEl = document.getElementById('articleSource');
             sourceEl.style.display = 'inline-flex';
@@ -1187,8 +1050,8 @@
             findingsList.innerHTML = '';
             mockData.findings.forEach(finding => {
                 const iconColor = finding.type === 'danger' ? 'text-danger' : 'text-warning';
-                const bgColor = finding.type === 'danger' ? 'bg-danger/10 border-danger/30' : 'bg-warning/10 border-warning/30';
-                const iconHtml = finding.type === 'danger'
+                const bgColor   = finding.type === 'danger' ? 'bg-danger/10 border-danger/30' : 'bg-warning/10 border-warning/30';
+                const iconHtml  = finding.type === 'danger'
                     ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${iconColor} mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`
                     : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${iconColor} mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
                 findingsList.innerHTML += `
@@ -1201,43 +1064,44 @@
                     </li>`;
             });
 
-            document.getElementById('articleBody').innerHTML = mockData.paragraphs.map(p => `<p>${p}</p>`).join('');
-            document.getElementById('accordionGroq').innerText = mockData.groqExplanation;
+            document.getElementById('articleBody').innerHTML         = mockData.paragraphs.map(p => `<p>${p}</p>`).join('');
+            document.getElementById('accordionGroq').innerText       = mockData.groqExplanation;
             document.getElementById('accordionContentAnalysis').innerText =
                 `Text credibility score: ${mockData.textAnalysisScore}/40. AI label: ${mockData.aiLabel}. Sentiment: ${mockData.sentiment}. Clickbait score: ${mockData.clickbaitScore}.`;
             document.getElementById('accordionDomain').innerText =
-                mockData.domainAge !== null
+                mockData.domainAge !== null && mockData.domainAge !== undefined
                     ? `Domain age: ${mockData.domainAge} days. HTTPS: ${mockData.isHttps ? 'Yes ✓' : 'No ✗'}.`
                     : 'Domain information not available (text input mode).';
 
-            // Reveal card action buttons
             document.getElementById('cardActionButtons').style.opacity = '1';
 
-            // Reveal bottom CTA with animation
+            // ── Category badge in score card ──
+            const catKey        = mockData.category || 'GENERAL';
+            const catMeta       = CATEGORY_META[catKey] || CATEGORY_META['GENERAL'];
+            const scoreCatBadge = document.getElementById('scoreCategoryBadge');
+            const scoreCatLabel = document.getElementById('scoreCategoryLabel');
+            scoreCatLabel.textContent = catMeta.label;
+            scoreCatLabel.className   = `text-base font-extrabold tracking-wide ${catMeta.color.split(' ')[0]}`;
+            scoreCatBadge.classList.remove('hidden');
+
             setTimeout(() => {
                 const cta = document.getElementById('bottomCTA');
-                cta.style.opacity = '1';
+                cta.style.opacity   = '1';
                 cta.style.transform = 'translateY(0)';
             }, 800);
 
-            // Score ring + verdict
-            let colorHex, colorClass, verdictText;
-            if (mockData.authenticityScore < 35) {
-                colorHex = '#EF4444'; colorClass = 'bg-danger'; verdictText = 'HIGHLY LIKELY FAKE';
-                document.getElementById('dangerGlow').style.opacity = '1';
-            } else if (mockData.authenticityScore < 55) {
-                colorHex = '#F59E0B'; colorClass = 'bg-warning'; verdictText = 'UNVERIFIED';
-            } else if (mockData.authenticityScore < 75) {
-                colorHex = '#06B6D4'; colorClass = 'bg-secondary'; verdictText = 'LIKELY REAL';
-            } else {
-                colorHex = '#10B981'; colorClass = 'bg-success'; verdictText = 'REAL';
-            }
+            // ── Use backend verdict — never recalculate from score ──
+            const { label: verdictText, colorClass, colorHex, badgeClasses } = mockData.verdictMeta;
 
             document.getElementById('scoreBgIndicator').className =
                 `absolute top-0 left-0 w-full h-1 transition-colors duration-1000 ${colorClass}`;
 
+            if (mockData.backendVerdict.toUpperCase() === 'FAKE') {
+                document.getElementById('dangerGlow').style.opacity = '1';
+            }
+
             const circumference = 2 * Math.PI * 45;
-            const circleEl = document.getElementById('scoreCircle');
+            const circleEl      = document.getElementById('scoreCircle');
             circleEl.style.stroke = colorHex;
             const offset = circumference - (mockData.authenticityScore / 100) * circumference;
 
@@ -1249,7 +1113,7 @@
                 const step = (timestamp) => {
                     if (!startTimestamp) startTimestamp = timestamp;
                     const progress = Math.min((timestamp - startTimestamp) / 1500, 1);
-                    const ease = 1 - Math.pow(1 - progress, 4);
+                    const ease     = 1 - Math.pow(1 - progress, 4);
                     scoreValueEl.innerText = Math.floor(ease * mockData.authenticityScore);
                     if (progress < 1) window.requestAnimationFrame(step);
                     else scoreValueEl.innerText = mockData.authenticityScore;
@@ -1258,20 +1122,18 @@
 
                 const verdictEl = document.getElementById('verdictBadge');
                 verdictEl.classList.remove('skeleton', 'w-32', 'bg-gray-200', 'dark:bg-gray-800', 'border-gray-300', 'dark:border-gray-600');
-                if (colorClass === 'bg-danger') verdictEl.classList.add('bg-danger/20', 'border-danger/50', 'text-danger');
-                else if (colorClass === 'bg-warning') verdictEl.classList.add('bg-warning/20', 'border-warning/50', 'text-warning');
-                else verdictEl.classList.add('bg-success/20', 'border-success/50', 'text-success');
-                verdictEl.innerText = verdictText;
+                verdictEl.className  = `mt-4 px-4 py-1.5 rounded-full border font-bold text-sm ${badgeClasses}`;
+                verdictEl.innerText  = verdictText;
 
-                document.getElementById('textBar').style.width = `${(mockData.textAnalysisScore / 40) * 100}%`;
-                document.getElementById('templateBar').style.width = `${(mockData.templateCheckScore / 25) * 100}%`;
-                document.getElementById('domainBar').style.width = `${(mockData.domainAgeScore / 20) * 100}%`;
-                document.getElementById('headlineBar').style.width = `${(mockData.headlineMatchScore / 15) * 100}%`;
+                document.getElementById('textBar').style.width     = `${(mockData.textAnalysisScore   / 40) * 100}%`;
+                document.getElementById('templateBar').style.width = `${(mockData.templateCheckScore  / 25) * 100}%`;
+                document.getElementById('domainBar').style.width   = `${(mockData.domainAgeScore      / 20) * 100}%`;
+                document.getElementById('headlineBar').style.width = `${(mockData.headlineMatchScore  / 15) * 100}%`;
 
                 setTimeout(() => {
-                    document.getElementById('textScore').innerText = mockData.textAnalysisScore;
+                    document.getElementById('textScore').innerText     = mockData.textAnalysisScore;
                     document.getElementById('templateScore').innerText = mockData.templateCheckScore;
-                    document.getElementById('domainScore').innerText = mockData.domainAgeScore;
+                    document.getElementById('domainScore').innerText   = mockData.domainAgeScore;
                     document.getElementById('headlineScore').innerText = mockData.headlineMatchScore;
                 }, 1000);
             }, 300);
@@ -1281,7 +1143,7 @@
         function downloadPDF() {
             try {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                const doc  = new jsPDF({ unit: 'mm', format: 'a4' });
                 const pageW = doc.internal.pageSize.getWidth();
                 let y = 20;
 
@@ -1296,17 +1158,21 @@
                 y = 28;
                 doc.setTextColor(30, 30, 30);
 
-                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
-                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
-                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
-                const scoreColor = mockData.authenticityScore >= 70 ? [16, 185, 129] : mockData.authenticityScore >= 40 ? [245, 158, 11] : [239, 68, 68];
+                const verdictText = mockData.verdictMeta.label;
+                const sv          = mockData.backendVerdict.toUpperCase();
+                const scoreColor  = sv === 'REAL' ? [16, 185, 129] : sv === 'LIKELY REAL' ? [6, 182, 212] : sv === 'SUSPICIOUS' ? [245, 158, 11] : [239, 68, 68];
 
                 doc.setFontSize(22); doc.setFont('helvetica', 'bold');
                 doc.setTextColor(...scoreColor);
                 doc.text(`${mockData.authenticityScore}/100`, 14, y);
                 doc.setFontSize(11); doc.setTextColor(30, 30, 30);
                 doc.text(verdictText, 14, y + 8);
-                y += 18;
+
+                // Category in PDF
+                const catMeta = CATEGORY_META[mockData.category] || CATEGORY_META['GENERAL'];
+                doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+                doc.text(`Category: ${catMeta.label}`, 14, y + 16);
+                y += 26;
 
                 doc.setDrawColor(200, 200, 200);
                 doc.line(14, y, pageW - 14, y); y += 8;
@@ -1331,9 +1197,9 @@
                 doc.text('Score Breakdown', 14, y); y += 7;
                 doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
                 [
-                    ['Text Analysis', `${mockData.textAnalysisScore} / 40`],
+                    ['Text Analysis',  `${mockData.textAnalysisScore}  / 40`],
                     ['Template Check', `${mockData.templateCheckScore} / 25`],
-                    ['Domain Age', `${mockData.domainAgeScore} / 20`],
+                    ['Domain Age',     `${mockData.domainAgeScore}     / 20`],
                     ['Headline Match', `${mockData.headlineMatchScore} / 15`],
                 ].forEach(([label, val]) => { doc.text(`• ${label}: ${val}`, 16, y); y += 5.5; });
 
@@ -1351,12 +1217,12 @@
         // ─── COPY ─────────────────────────────────────────────────────
         function copyResultToClipboard() {
             try {
-                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
-                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
-                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
+                const verdictText = mockData.verdictMeta.label;
+                const catMeta     = CATEGORY_META[mockData.category] || CATEGORY_META['GENERAL'];
                 const summary = `TruthGuard Analysis Result
 ──────────────────────────
 Score: ${mockData.authenticityScore}/100 — ${verdictText}
+Category: ${catMeta.label}
 Source: ${mockData.source}
 Date: ${mockData.dateAnalyzed}
 
@@ -1383,12 +1249,11 @@ Generated by TruthGuard`;
         // ─── SHARE ────────────────────────────────────────────────────
         function shareResult() {
             try {
-                const verdictText = mockData.authenticityScore >= 75 ? 'REAL' :
-                    mockData.authenticityScore >= 55 ? 'LIKELY REAL' :
-                        mockData.authenticityScore >= 35 ? 'UNVERIFIED' : 'HIGHLY LIKELY FAKE';
-                const text = `I fact-checked an article with TruthGuard — Score: ${mockData.authenticityScore}/100 (${verdictText})`;
+                const verdictText = mockData.verdictMeta.label;
+                const catMeta     = CATEGORY_META[mockData.category] || CATEGORY_META['GENERAL'];
+                const text = `I fact-checked a ${catMeta.label} article with TruthGuard — Score: ${mockData.authenticityScore}/100 (${verdictText})`;
                 if (navigator.share) {
-                    navigator.share({ title: 'TruthGuard Analysis', text, url: window.location.href }).catch(() => { });
+                    navigator.share({ title: 'TruthGuard Analysis', text, url: window.location.href }).catch(() => {});
                 } else {
                     navigator.clipboard.writeText(text).then(() => {
                         const toast = document.getElementById('copyToast');

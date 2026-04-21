@@ -5,25 +5,22 @@ const Groq = require('groq-sdk');
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ============================================================
-// 🌍 REALITY ANCHOR — The Senior Investigative Journalist
+// 🌍 REALITY ANCHOR
 // ============================================================
-
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
 const REALITY_ANCHOR = `
-You are an elite, senior investigative journalist and lead fact-checker in Bangladesh. Today's date is ${formattedDate}.
+You are a senior Bangladeshi fact-checker. Today's date is ${formattedDate}.
 
-Your primary goal is to ruthlessly hunt down misinformation, authenticate claims, and verify journalistic integrity. You do not trust claims easily. You look for verified sources, exact dates, and logical consistency.
-
-CONFIRMED CURRENT FACTS (treat these as absolute ground truth):
+CONFIRMED CURRENT FACTS (absolute ground truth — never override these):
 - Bangladesh PM: Tarique Rahman (took office 2025, BNP-led government)
 - Sheikh Hasina: Fled Bangladesh in August 2024, NO longer PM, NO longer in power
 - Awami League: Currently NOT in government
-- If any article presents Sheikh Hasina as the ACTIVE/CURRENT Prime Minister, that is FACTUALLY WRONG.
-- If any article presents an Awami League minister as currently serving in government, that is FACTUALLY WRONG.
+- If any article presents Sheikh Hasina as the ACTIVE/CURRENT Prime Minister → FACTUALLY WRONG
+- If any article presents an Awami League minister as currently serving → FACTUALLY WRONG
 
-Your job is ONLY to follow the exact instruction given. Do not add extra commentary.
+Your job is ONLY to follow the exact instruction given.
 Always return valid JSON and nothing else.
 `.trim();
 
@@ -34,64 +31,84 @@ const CATEGORIES = {
     POLITICS: {
         name: 'Politics',
         emoji: '🏛️',
-        extractFocus: 'Extract: (1) Full name of the leader/official mentioned, (2) Their claimed title/position, (3) The specific government action or event claimed, (4) Any specific numbers.',
-        contradictionFocus: 'Pay special attention to whether the person\'s title/position is correct for 2026.',
+        extractFocus: 'Extract: (1) Full name of the leader/official, (2) Their claimed title/position, (3) The specific government action or event, (4) Any specific numbers.',
+        contradictionFocus: 'Pay special attention to whether the person title/position is correct for 2026.',
     },
     HEALTH: {
         name: 'Health',
         emoji: '🏥',
-        extractFocus: 'Extract: (1) Disease or health issue name, (2) Death/affected count, (3) Hospital or health organization name.',
+        extractFocus: 'Extract: (1) Disease or health issue name, (2) Death/affected count, (3) Hospital or health organization name (DGHS, WHO, IEDCR), (4) Location.',
         contradictionFocus: 'Pay special attention to whether the statistics and organization names are real.',
     },
     SPORTS: {
         name: 'Sports',
         emoji: '⚽',
-        extractFocus: 'Extract: (1) Sport type, (2) Team or player names, (3) Match result or score, (4) Tournament name, (5) Date of match.',
+        extractFocus: 'Extract: (1) Sport type, (2) Team or player names, (3) Match result or score, (4) Tournament name, (5) Date.',
         contradictionFocus: 'Pay special attention to whether the score and teams match official records.',
     },
     ECONOMY: {
         name: 'Economy',
         emoji: '💰',
-        extractFocus: 'Extract: (1) Specific Taka/dollar figures mentioned, (2) Ministry or organization making the claim, (3) Economic indicator.',
-        contradictionFocus: 'Pay special attention to whether the figures are realistic and match official announcements.',
+        extractFocus: 'Extract: (1) Specific Taka/dollar figures, (2) Ministry or organization, (3) Economic indicator (inflation, GDP, budget), (4) Time period.',
+        contradictionFocus: 'Pay special attention to whether the figures match official announcements.',
     },
     WORLD: {
         name: 'World News',
         emoji: '🌍',
-        extractFocus: 'Extract: (1) Country or countries involved, (2) Leader or official name and title, (3) The specific international event.',
-        contradictionFocus: 'Pay special attention to whether the leader names and their positions are correct.',
+        extractFocus: 'Extract: (1) Countries involved, (2) Leader name and title, (3) The specific international event, (4) Date or timeframe.',
+        contradictionFocus: 'Pay special attention to whether leader names and positions are correct.',
+    },
+    ENTERTAINMENT: {
+        name: 'Entertainment',
+        emoji: '🎬',
+        extractFocus: 'Extract: (1) Celebrity or artist name, (2) The specific event (movie release, award, controversy, death), (3) Any specific platform or production house, (4) Date or timeframe.',
+        contradictionFocus: 'Pay special attention to whether the celebrity name, event, and platform details are real and verifiable.',
     },
     GENERAL: {
         name: 'General',
         emoji: '📰',
-        extractFocus: 'Extract: (1) The single most important claim, (2) Any named person and their role, (3) Specific numbers/statistics.',
+        extractFocus: 'Extract: (1) The single most important claim, (2) Any named person and their role, (3) Any specific numbers, (4) Location of the event.',
         contradictionFocus: 'Pay special attention to whether the main claim can be confirmed by any reliable source.',
     },
 };
 
 // ============================================================
-// 🧮 FIXED MATH SCORING (Simple & Strict)
+// 🧮 SCORING
+//
+// PHILOSOPHY:
+//   Web match is the dominant signal.
+//   NLI is tiebreaker only for PARTIAL/UNKNOWN (capped ±8 pts).
+//   Ghost entailment block: UNKNOWN → NLI cannot add positive pts.
+//
+// 🔒 SAFE-ZONE GUARDRAIL LOGIC (overrides raw score):
+//   Web 0 results   → SUSPICIOUS  (no evidence either way)
+//   Web UNKNOWN     → SUSPICIOUS  (unconfirmed)
+//   Web PARTIAL     → SUSPICIOUS  (not fully confirmed)
+//   Web NO          → SUSPICIOUS  (contradiction ≠ proof of fake)
+//   Web YES         → trust score → REAL / LIKELY REAL
+//
+// FAKE verdict is ONLY assigned by hard overrides:
+//   - Sheikh Hasina presented as active PM
+//   - Physically impossible claims
+//   - Non-news content (gate rejected)
+//
+// FALLBACK (web API failed entirely):
+//   NLI score alone decides verdict via nliOnlyVerdict()
 // ============================================================
-const calculateScore = ({ mlScore, webMatchResult, categoryPenalty, domainBonus }) => {
+const calculateScore = ({ mlScore, webMatchResult, domainBonus }) => {
     let score = 50;
 
-    // 1. Web Match Contribution
     if (webMatchResult === 'YES') score += 40;
     else if (webMatchResult === 'PARTIAL') score += 10;
     else if (webMatchResult === 'NO') score -= 30;
-    else score += 0; // UNKNOWN adds nothing
 
-    // 2. NLI Contribution (Capped at ±15)
-    let mlContribution = ((mlScore - 50) / 50) * 15;
-
-    // 🛑 STRICT RULE: If Web is UNKNOWN (0 hits), NLI CANNOT add positive points
-    if (webMatchResult === 'UNKNOWN' && mlContribution > 0) {
-        mlContribution = 0; 
-        console.log(`        🛡️ GHOST BLOCK: Web UNKNOWN → NLI positive contribution zeroed`);
+    let nliContribution = ((mlScore - 50) / 50) * 8;
+    if (webMatchResult === 'UNKNOWN' && nliContribution > 0) {
+        nliContribution = 0;
+        console.log(`         🛡️ GHOST BLOCK: Web UNKNOWN → NLI positive blocked`);
     }
 
-    score += mlContribution;
-    score -= categoryPenalty;
+    score += nliContribution;
     score += domainBonus;
 
     return Math.round(Math.max(0, Math.min(100, score)));
@@ -104,13 +121,34 @@ const scoreToVerdict = (score) => {
     return 'FAKE';
 };
 
+// ── NLI-only verdict when web API fails completely ──
+// NLI score 0-100:
+//   High entailment (≥70)   → LIKELY REAL  (not REAL — web didn't confirm)
+//   Neutral (30-69)         → SUSPICIOUS
+//   Low/contradiction (<30) → FAKE
+const nliOnlyVerdict = (mlScore, nliVerdictLabel) => {
+    console.log(`         🔄 WEB FAILED — using NLI-only verdict (score: ${mlScore}, verdict: ${nliVerdictLabel})`);
+    if (nliVerdictLabel === 'CONTRADICTION' || mlScore < 30) return 'FAKE';
+    if (mlScore >= 70 && nliVerdictLabel === 'ENTAILMENT') return 'LIKELY REAL';
+    return 'SUSPICIOUS';
+};
+
 // ============================================================
 // 🔍 STEP 3A — Detect Category
 // ============================================================
 const detectCategory = async (articleText) => {
     const prompt = `
-Classify this Bengali news article into EXACTLY ONE of these categories:
-POLITICS, HEALTH, SPORTS, ECONOMY, WORLD, GENERAL
+Classify this Bengali news article into EXACTLY ONE category:
+POLITICS, HEALTH, SPORTS, ECONOMY, WORLD, ENTERTAINMENT, GENERAL
+
+Rules:
+- POLITICS: Bangladesh government, ministers, PM, elections, parliament
+- HEALTH: disease, hospital, medicine, outbreak, death from illness
+- SPORTS: cricket, football, match, tournament, player, score
+- ECONOMY: taka, budget, price, inflation, bank, GDP, export, import
+- WORLD: international events, foreign countries, global leaders
+- ENTERTAINMENT: celebrity, actor, singer, movie, drama, award, film, music, OTT
+- GENERAL: anything else
 
 Return JSON only: { "category": "POLITICS" }
 
@@ -120,7 +158,7 @@ Article: ${articleText.substring(0, 600)}`;
         model: 'llama-3.1-8b-instant',
         messages: [
             { role: 'system', content: REALITY_ANCHOR },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
         temperature: 0,
@@ -132,35 +170,34 @@ Article: ${articleText.substring(0, 600)}`;
 };
 
 // ============================================================
-// 🔎 STEP 3B — Extract MAIN CLAIM + Domain-Strict Search
+// 🔎 STEP 3B — Extract Main Claim + Search Query
 // ============================================================
 const extractClaims = async (articleText, categoryKey) => {
     const cat = CATEGORIES[categoryKey];
 
     const prompt = `
-You are a senior investigative journalist preparing to verify a breaking story.
+You are extracting claims from a Bengali news article for fact-checking.
 
 CATEGORY: ${cat.name}
 FOCUS: ${cat.extractFocus}
 
 YOUR TASKS:
-1. Extract the MAIN_CLAIM (the central, verifiable fact).
-2. Extract SUPPORTING_CLAIMS (numbers, names, dates).
-3. Generate a HIGH-PRECISION SEARCH QUERY to verify the claim.
-
-CRITICAL SEARCH QUERY RULES:
-- The search query MUST include the year 2026 and the exact name of the key person mentioned (to verify if they are actually in power).
-- For local Bangladesh news (Politics, Health, Economy, General), you MUST restrict the search to reliable domains. 
-  Append this exact string to your query: site:prothomalo.com OR site:thedailystar.net OR site:bbc.com/bengali OR site:ittefaq.com.bd
-- For WORLD or SPORTS news, do not use domain restrictions.
-- Example Local Query: "Sheikh Hasina $25 billion semiconductor deal 2026 site:prothomalo.com OR site:thedailystar.net"
+1. MAIN_CLAIM: The single most central, verifiable fact. One sentence in English.
+2. SUPPORTING_CLAIMS: 2-4 secondary details (numbers, names, dates).
+3. SEARCH_QUERY: A precise 6-10 word English query to find this exact event on the internet.
+   - Always include the year 2026.
+   - Always include the key person's full name if there is one.
+   - Use official English acronyms for Bangladeshi orgs (BRTA, DGHS, NBR, BB, ACC).
+   - Be specific enough to find THIS exact event — not a general topic.
+   - GOOD: "Tarique Rahman Bangladesh digital currency launch 2026"
+   - BAD:  "Bangladesh economy news 2026"
 
 Return JSON only:
 {
-  "main_claim": "One sentence describing the core verifiable claim",
+  "main_claim": "One sentence in English describing the core verifiable claim",
   "supporting_claims": ["claim 1", "claim 2", "claim 3"],
-  "search_query": "Your highly targeted search query",
-  "key_person": "Full name of main person mentioned or null",
+  "search_query": "your precise search query here",
+  "key_person": "Full name of main person or null",
   "key_person_title": "Their claimed title/position or null"
 }
 
@@ -170,7 +207,7 @@ Article: ${articleText.substring(0, 1000)}`;
         model: 'llama-3.1-8b-instant',
         messages: [
             { role: 'system', content: REALITY_ANCHOR },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
         temperature: 0,
@@ -187,35 +224,53 @@ Article: ${articleText.substring(0, 1000)}`;
 };
 
 // ============================================================
-// ⚖️ STEP 5A — Compare claims vs web reality
+// ⚖️ STEP 5A — Compare Claim vs Web Reality
 // ============================================================
 const compareClaimsVsWeb = async (mainClaim, supportingClaims, webContext, categoryKey) => {
     const cat = CATEGORIES[categoryKey];
 
     const prompt = `
-You are a senior investigative journalist. You must compare an unverified claim against your live web research.
+You are a strict fact-checker comparing an article's main claim against live web research.
 
-UNVERIFIED MAIN CLAIM:
+MAIN CLAIM:
 "${mainClaim}"
 
-LIVE WEB RESEARCH RESULTS (From trusted domains):
+SUPPORTING CLAIMS:
+${supportingClaims.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+
+WEB RESEARCH RESULT:
 "${webContext}"
 
 VERIFICATION FOCUS: ${cat.contradictionFocus}
 
-YOUR TASK: Apply strict journalistic standards.
+STRICT RULES — apply in this exact order:
 
-STRICT RULES:
-RULE 1 — IDENTITY & ROLE CONTRADICTION: If the claim mentions a specific person in a specific role (e.g., Sheikh Hasina as PM) but your reality anchor or web data shows that person is NO LONGER in that role, you MUST mark this as "NO" immediately. Even if the event is real, the leadership is fake.
-RULE 2 — DIRECT CONTRADICTION: If the web explicitly says the opposite, or gives vastly different numbers/timelines → "NO"
-RULE 3 — MINOR DETAILS DIFFER: If the core event happened, but numbers/dates are slightly off → "PARTIAL"
-RULE 4 — FULLY CONFIRMED: If trusted web sources report the exact same event → "YES"
-RULE 5 — THE SILENCE PENALTY (UNKNOWN): If a major event is claimed but your web research returns NOTHING or completely unrelated news, this is highly suspicious. Major news would be covered by reliable sources. If there is no mention of the claim in the web context → "UNKNOWN"
+RULE 1 — IDENTITY/ROLE WRONG:
+If the claim states a specific person in a role (e.g. Sheikh Hasina as PM)
+but reality or web shows that person is NOT in that role → "NO" immediately.
+
+RULE 2 — DIRECT CONTRADICTION:
+If web explicitly states the opposite, or gives vastly different numbers/timelines → "NO"
+
+RULE 3 — TIMELINE/SCALE CONTRADICTION:
+Claim says "within days/next week/next month" but web says "long-term/by 2030/future plan" → "NO"
+Claim says extreme scale but web describes gradual/partial plan → "NO"
+
+RULE 4 — CORE EVENT CONFIRMED, MINOR DETAILS DIFFER:
+Core event confirmed as real but only small numbers or dates differ slightly → "PARTIAL"
+NOTE: If the KEY SPECIFIC CLAIM (the unusual part) is not confirmed → use UNKNOWN not PARTIAL.
+
+RULE 5 — FULLY CONFIRMED:
+Web directly and clearly confirms the main claim with matching details → "YES"
+
+RULE 6 — NO OVERLAP / NOT CONFIRMED:
+Web result is about a different topic OR does not mention this event at all → "UNKNOWN"
+WARNING: If web contradicts timeline or scale → use "NO" not "UNKNOWN".
 
 Return JSON only:
 {
   "main_claim_verdict": "YES | NO | PARTIAL | UNKNOWN",
-  "main_claim_reason": "One sharp, journalistic sentence explaining why.",
+  "main_claim_reason": "One sharp sentence explaining the verdict",
   "contradiction_found": true | false,
   "contradiction_detail": "What specifically is contradicted, or null"
 }`;
@@ -224,7 +279,7 @@ Return JSON only:
         model: 'llama-3.1-8b-instant',
         messages: [
             { role: 'system', content: REALITY_ANCHOR },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
         temperature: 0,
@@ -240,27 +295,46 @@ Return JSON only:
 };
 
 // ============================================================
-// 🧠 STEP 3C — Reality Plausibility Pre-Check
+// 🧠 STEP 3C — Plausibility Check
+// Hard override ONLY for physically impossible claims.
+// Normal political/economic announcements must pass through.
 // ============================================================
-const checkPlausibility = async (mainClaim, categoryKey) => {
+const checkPlausibility = async (mainClaim) => {
     const prompt = `
-You are a senior fact-checker. Judge whether this claim is physically and logically possible.
+You are a senior fact-checker. Judge ONLY whether this claim is physically and logically possible.
 
 CLAIM: "${mainClaim}"
 
-Ask yourself: Is the timeline realistic? Is the scale realistic? Does this defy physics or basic economics?
+Only mark impossible if it CLEARLY defies physics, basic economics, or governance reality.
+Do NOT flag things that are merely surprising, unlikely, or politically controversial.
+
+IMPOSSIBLE — flag these:
+- "Bangladesh runs 100% on solar within a month"
+- "Every citizen gets free phone tomorrow"
+- "New city built in 3 days"
+- "GDP doubled overnight"
+- "50,000 people died in Dhaka in 24 hours from a new virus"
+
+PLAUSIBLE — do NOT flag these (even if they seem unlikely):
+- "Government plans solar capacity increase by 2030"
+- "Bangladesh beat India by 5 wickets"
+- "New hospital inaugurated in Dhaka"
+- "PM signed trade deal with China"
+- "All university students to get free laptops and 50,000 Taka stipend"
+- Any normal political announcement, sports result, economic news, local event
+- Any celebrity news, film release, award, entertainment event
 
 Return JSON only:
 {
   "is_plausible": true | false,
-  "reason": "One sentence why this is or is not physically possible"
+  "reason": "One sentence. Only explain if false."
 }`;
 
     const res = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: [
             { role: 'system', content: REALITY_ANCHOR },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
         temperature: 0,
@@ -274,61 +348,30 @@ Return JSON only:
 };
 
 // ============================================================
-// 🚨 STEP 5B — GLOBAL Category Reality Penalty (BULLETPROOF)
+// 🚨 HARD OVERRIDES
+// Non-negotiable known facts. Triggers → FAKE immediately.
+// Bypasses all scoring and web search.
 // ============================================================
-const getCategoryPenalty = (categoryKey, extracted, webContext) => {
-    let penalty = 0;
-    const webLower = webContext.toLowerCase();
-    
-    // Convert everything extracted into one giant lowercase string for foolproof searching
-    const extractionDump = JSON.stringify(extracted).toLowerCase();
+const checkHardOverrides = (extracted) => {
+    const dump = JSON.stringify(extracted).toLowerCase();
 
-    // ──────────────────────────────────────────────────────────
-    // 🌍 GLOBAL LEADERSHIP CHECK (English & Bengali)
-    // ──────────────────────────────────────────────────────────
-    
-    // Check for both English and Bengali spellings anywhere in the extracted data
-    const hasinaMentioned = extractionDump.includes('hasina') || extractionDump.includes('হাসিনা');
-    const pmMentioned = extractionDump.includes('prime minister') || extractionDump.includes('pm') || extractionDump.includes('প্রধানমন্ত্রী');
+    const hashinaMentioned = dump.includes('hasina') || dump.includes('হাসিনা');
+    const pmMentioned = dump.includes('prime minister') || dump.includes('প্রধানমন্ত্রী') || dump.includes(' pm ');
 
-    if (hasinaMentioned && pmMentioned) {
-        penalty += 100; // THE NUKE. Drops score by 100 points instantly.
-        console.log('        🚨 FATAL REALITY FAIL: Article claims Hasina is PM (Bengali/English match) → penalty -100 (NUKED)');
+    if (hashinaMentioned && pmMentioned) {
+        return {
+            triggered: true,
+            reason: 'Article presents Sheikh Hasina as active Prime Minister — she left power in August 2024.',
+        };
     }
 
-    // Check for old ministers in both languages
-    const oldMinisters = ['টিপু মুনশি', 'আবুল হাসান মাহমুদ আলী', 'সাবের হোসেন চৌধুরী', 'tipu munshi', 'mahmud ali', 'saber hossain'];
-    if (oldMinisters.some(m => extractionDump.includes(m) || webLower.includes(m))) {
-        penalty += 50; // Heavy penalty for old ministers
-        console.log('        ⚠️ GLOBAL REALITY FAIL: Former Awami League minister found active → penalty -50');
-    }
-
-    // ──────────────────────────────────────────────────────────
-    // 📉 CATEGORY SPECIFIC CHECKS
-    // ──────────────────────────────────────────────────────────
-    if (categoryKey === 'HEALTH') {
-        const hasOrgConfirmation = webLower.includes('dghs') || webLower.includes('iedcr') ||
-            webLower.includes('who') || webLower.includes('health ministry');
-        if (!hasOrgConfirmation && extracted.mainClaim.match(/\d{4,}/)) {
-            penalty += 10;
-        }
-    }
-
-    if (categoryKey === 'ECONOMY') {
-        const hasSourceConfirmation = webLower.includes('bangladesh bank') ||
-            webLower.includes('nbr') || webLower.includes('finance ministry');
-        if (!hasSourceConfirmation && extracted.mainClaim.match(/\d+\s*lakh\s*crore|\d+\s*হাজার\s*কোটি/i)) {
-            penalty += 15;
-        }
-    }
-
-    return penalty;
+    return { triggered: false, reason: null };
 };
 
 // ============================================================
-// ✍️ STEP 5E — Generate Explanation
+// ✍️ STEP 5D — Generate Explanation
 // ============================================================
-const generateExplanation = async (finalScore, finalVerdict, mainClaim, webMatchResult, contradictionDetail, categoryKey) => {
+const generateExplanation = async (finalVerdict, mainClaim, webMatchResult, contradictionDetail, categoryKey) => {
     const cat = CATEGORIES[categoryKey];
 
     const prompt = `
@@ -340,7 +383,12 @@ Main Claim Checked: "${mainClaim}"
 Web Verification Result: ${webMatchResult}
 Contradiction Found: ${contradictionDetail || 'None'}
 
-Write as if explaining to a regular reader why this article got this verdict. Do NOT mention the score.
+Rules:
+- If verdict is SUSPICIOUS: explain that the claim could not be confirmed by web sources.
+- If verdict is FAKE: explain what specifically was contradicted or disproved.
+- If verdict is REAL or LIKELY REAL: explain what sources confirmed it.
+- Write as if explaining to a regular reader.
+- Do NOT mention any score. Do NOT say "Based on our analysis".
 
 Return JSON only: { "explanation": "2 sentences here." }`;
 
@@ -348,7 +396,7 @@ Return JSON only: { "explanation": "2 sentences here." }`;
         model: 'llama-3.1-8b-instant',
         messages: [
             { role: 'system', content: REALITY_ANCHOR },
-            { role: 'user', content: prompt }
+            { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
         temperature: 0.3,
@@ -359,6 +407,47 @@ Return JSON only: { "explanation": "2 sentences here." }`;
 };
 
 // ============================================================
+// 🛠️ HELPER — Save record and return response
+// Used for early exits: hard overrides, gate blocks, implausible.
+// ============================================================
+const saveAndReturn = async (res, {
+    userId, inputType, inputContent, articleText,
+    detectedCategory, extracted, finalScore, finalVerdict,
+    groqExplanation, webMatchResult, contradictionDetail,
+    nliVerdict, webIsEmpty, mlScore,
+}) => {
+    const record = await Analysis.create({
+        userId, inputType, inputContent,
+        totalScore: finalScore,
+        verdict: finalVerdict,
+        textScore: mlScore,
+        details: {
+            articleText,
+            category: detectedCategory,
+            mainClaim: extracted.mainClaim || null,
+            supportingClaims: extracted.supportingClaims || [],
+            keyPerson: extracted.keyPerson || null,
+            keyPersonTitle: extracted.keyPersonTitle || null,
+            webMatchResult,
+            contradictionFound: !!contradictionDetail,
+            contradictionDetail: contradictionDetail || null,
+            nliVerdict,
+            webIsEmpty,
+            groqExplanation,
+            pipelineSucceeded: true,
+        },
+    });
+
+    console.log(`\n==================================================`);
+    console.log(`🏁 ANALYSIS COMPLETE — TRUTHGUARD V13.0`);
+    console.log(`   ⚖️  Verdict : ${finalVerdict}`);
+    console.log(`   💡 Reason  : ${groqExplanation}`);
+    console.log(`==================================================\n`);
+
+    return res.status(201).json({ result: record });
+};
+
+// ============================================================
 // 🚀 MAIN ANALYZE FUNCTION
 // ============================================================
 const analyze = async (req, res) => {
@@ -366,7 +455,9 @@ const analyze = async (req, res) => {
         const { inputType, inputContent } = req.body;
         const userId = req.user.id;
 
-        // 🛑 STEP 0A: Word count gate
+        // ─────────────────────────────────────────────────────
+        // 🛑 STEP 0A: Word Count Gate
+        // ─────────────────────────────────────────────────────
         if (inputType === 'text') {
             const wordCount = inputContent.trim().split(/\s+/).length;
             if (wordCount > 2500) {
@@ -378,71 +469,98 @@ const analyze = async (req, res) => {
         }
 
         // ─────────────────────────────────────────────────────
-        // 🛑 STEP 0B: CONTENT TYPE GATE (Isolated from Politics)
+        // 🛑 STEP 0B: Content Type Gate
+        //
+        // ONLY checks writing style/structure — NOT fact-checking.
+        // Blocks obvious non-news: fiction, poems, reading exercises.
+        //
+        // If gate says NOT valid → save as FAKE directly (no crash).
+        // If gate crashes → continue pipeline normally.
         // ─────────────────────────────────────────────────────
         if (inputType === 'text') {
-            console.log('\n[STEP 0B] 🔍 Content Type & AI Detection Gate');
+            console.log('\n[STEP 0B] 🔍 Content Type Gate');
             try {
-                const GATEKEEPER_SYSTEM = `
-                You are a strict Editorial Filter for a news agency. 
-                Your ONLY job is to determine if a submitted text is structurally a real news report.
-                Ignore fact-checking. Ignore politics. Focus entirely on writing style, genre, and journalistic format.
-                Always return valid JSON.
-                `.trim();
-
-                const gateCheck = await groq.chat.completions.create({
+                const gateRes = await groq.chat.completions.create({
                     model: 'llama-3.1-8b-instant',
                     messages: [
-                        { role: 'system', content: GATEKEEPER_SYSTEM },
                         {
-                            role: 'user', content: `
-Analyze this Bengali text and categorize it. You are the first line of defense against junk data.
+                            role: 'system',
+                            content: 'You are a writing style classifier. You ONLY check if text is structured like a news article. You do NOT fact-check, do NOT verify sources, do NOT judge if events are real or credible. Return valid JSON only.',
+                        },
+                        {
+                            role: 'user',
+                            content: `
+Look ONLY at the WRITING STYLE and STRUCTURE of this text.
+Do NOT think about whether the content is true or credible.
+Do NOT check sources or media coverage.
 
-RULES FOR REJECTION (Set is_valid_news to false if ANY match):
-1. FICTION/STORY: It reads like a fairy tale, moral lesson, or children's story (e.g., "রাজু নামের একটি ছেলে...", "এক দেশে ছিল...").
-2. LACK OF SPECIFICS: It makes big claims but names no specific dates, no exact locations, and no verifiable real-world officials.
-3. AI TEMPLATE: It feels robotic, overly perfect, or lists "levels" (স্তর ১, স্তর ২).
-4. OPINION/POEM: It is an essay, creative writing, or personal rant.
+REJECT (set is_valid_news: false) ONLY if it is clearly one of these:
+1. CHILDREN'S STORY / FICTION: "রাজু নামের একটি ছেলে...", "এক দেশে ছিল...", fairy tale style
+2. READING EXERCISE: Has "স্তর ১", "স্তর ২", "Level 1", "Level 2", or multiple versions of same story
+3. POEM / CREATIVE WRITING: Verse format, rhyming, personal diary, essay
+4. SOCIAL MEDIA POST: Casual chat language, no journalistic structure
 
-A valid news article MUST have a journalistic tone, specific entities (real people/places), and report on an event.
+ACCEPT (set is_valid_news: true) for EVERYTHING ELSE including:
+- Any news article even if the content seems unlikely or extraordinary
+- Any article with a newspaper header like "প্রথম আলো", "Daily Star" etc.
+- Any article reporting a political, sports, health, economic, or entertainment event
+- Any article that uses journalistic writing style
+
+When in doubt → ACCEPT. Your job is only to block obvious non-news content.
 
 Return JSON only:
 {
-  "is_valid_news": boolean,
-  "rejection_reason": "If false, write a sharp 1-sentence reason in English explaining why it fails journalistic standards. If true, write null."
+  "is_valid_news": true | false,
+  "rejection_reason": "One sentence in English if false, otherwise null"
 }
 
-Text to analyze:
-${inputContent.substring(0, 1000)}`
-                        }
+Text:
+${inputContent.substring(0, 1000)}`,
+                        },
                     ],
                     response_format: { type: 'json_object' },
                     temperature: 0,
                 });
 
-                const gate = JSON.parse(gateCheck.choices[0].message.content);
+                const gate = JSON.parse(gateRes.choices[0].message.content);
+                console.log(`         📋 Valid News: ${gate.is_valid_news}`);
 
-                console.log(`        📋 Is Valid News : ${gate.is_valid_news}`);
-                
                 if (!gate.is_valid_news) {
-                    console.log(`        🚫 GATE BLOCKED: ${gate.rejection_reason}`);
-                    return res.status(400).json({
-                        message: `This content was rejected by our editorial filter: ${gate.rejection_reason}`,
-                        gate_result: 'REJECTED_CONTENT',
+                    // ── Gate blocked: save as FAKE, never crash ──
+                    console.log(`         🚫 GATE: Not a news article → saving as FAKE`);
+                    return saveAndReturn(res, {
+                        userId, inputType, inputContent,
+                        articleText: inputContent,
+                        detectedCategory: 'GENERAL',
+                        extracted: {
+                            mainClaim: 'Content does not appear to be a news article.',
+                            supportingClaims: [],
+                            keyPerson: null,
+                            keyPersonTitle: null,
+                        },
+                        finalScore: 5,
+                        finalVerdict: 'FAKE',
+                        groqExplanation: `এই কন্টেন্টটি সংবাদ নিবন্ধ নয়: ${gate.rejection_reason || 'Not structured as a news article.'}`,
+                        webMatchResult: 'GATE_REJECTED',
+                        contradictionDetail: gate.rejection_reason || null,
+                        nliVerdict: 'SKIPPED',
+                        webIsEmpty: true,
+                        mlScore: 50,
                     });
                 }
-                console.log(`        ✅ Gate passed — confirmed as valid news structure`);
 
+                console.log(`         ✅ Gate passed`);
             } catch (gateErr) {
-                console.log(`        ⚠️ [WARNING] Gate check completely failed to parse JSON: ${gateErr.message}`);
+                // Gate crashed → continue pipeline, don't block user
+                console.log(`         ⚠️ Gate failed (${gateErr.message}) → continuing`);
             }
         }
 
         console.log('\n==================================================');
-        console.log('🔍 NEW ANALYSIS REQUEST: TRUTHGUARD V10.0 PIPELINE');
+        console.log('🔍 NEW ANALYSIS REQUEST: TRUTHGUARD V13.0 PIPELINE');
         console.log('==================================================');
-        console.log(`👤 User ID    : ${userId}`);
-        console.log(`📄 Input      : "${inputContent.substring(0, 60)}..."`);
+        console.log(`👤 User ID : ${userId}`);
+        console.log(`📄 Input   : "${inputContent.substring(0, 60)}..."`);
         console.log('--------------------------------------------------');
 
         // ─────────────────────────────────────────────────────
@@ -454,13 +572,17 @@ ${inputContent.substring(0, 1000)}`
         let isHttps = false;
 
         try {
-            const scraperRes = await axios.post('http://127.0.0.1:8000/scrape', { inputType, inputContent }, { timeout: 8000 });
+            const scraperRes = await axios.post(
+                'http://127.0.0.1:8000/scrape',
+                { inputType, inputContent },
+                { timeout: 8000 }
+            );
             articleText = scraperRes.data.article_text || inputContent;
             domainAge = scraperRes.data.domain_age;
             isHttps = scraperRes.data.is_https;
-            console.log(`        ✅ Scraper OK | Length: ${articleText.length} chars`);
-        } catch (e) {
-            console.log(`        ⚠️ Scraper offline → using raw input text`);
+            console.log(`         ✅ Scraper OK | Length: ${articleText.length} chars | HTTPS: ${isHttps} | Domain Age: ${domainAge || 'unknown'}`);
+        } catch {
+            console.log(`         ⚠️ Scraper offline → using raw input`);
         }
 
         let domainBonus = 0;
@@ -468,21 +590,21 @@ ${inputContent.substring(0, 1000)}`
         if (domainAge && domainAge > 365) domainBonus += 5;
 
         // ─────────────────────────────────────────────────────
-        // 🔬 STEP 2: NLI placeholder
+        // Pipeline state
         // ─────────────────────────────────────────────────────
-        console.log('\n[STEP 2] ⏭️ NLI placeholder — runs after web search (Step 5C)');
-        let mlScore = 50; 
-
+        let mlScore = 50;
         let finalScore = 50;
         let finalVerdict = 'SUSPICIOUS';
-        let groqExplanation = 'Analysis pipeline partially failed. Result based on available signals only.';
+        let groqExplanation = 'Analysis pipeline partially failed. Please verify manually.';
         let pipelineSucceeded = false;
         let detectedCategory = 'GENERAL';
         let extracted = {};
         let comparisonResult = {};
         let nliVerdict = 'NEUTRAL';
-        let plausibility = { isPlausible: true, reason: 'Pre-check not reached' };
-        let webIsEmpty = false; 
+        let webIsEmpty = false;
+        let webContext = 'No relevant information found online.';
+        let webApiFailed = false;
+        let webResultsCount = 0;
 
         try {
             // ─────────────────────────────────────────────────────
@@ -490,143 +612,195 @@ ${inputContent.substring(0, 1000)}`
             // ─────────────────────────────────────────────────────
             console.log('\n[STEP 3A] 🏷️ Detecting Article Category');
             detectedCategory = await detectCategory(articleText);
-            const cat = CATEGORIES[detectedCategory];
-            console.log(`        ✅ Category: ${cat.emoji} ${cat.name}`);
+            console.log(`         ✅ Category: ${CATEGORIES[detectedCategory].emoji} ${CATEGORIES[detectedCategory].name}`);
 
             // ─────────────────────────────────────────────────────
-            // 🔎 STEP 3B: EXTRACT MAIN CLAIM & GENERATE QUERY
+            // 🔎 STEP 3B: EXTRACT CLAIM + SEARCH QUERY
             // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 3B] 🔎 Extracting Claims & Generating Search Query');
+            console.log('\n[STEP 3B] 🔎 Extracting Main Claim & Search Query');
             extracted = await extractClaims(articleText, detectedCategory);
-            console.log(`        ✅ Main Claim  : "${extracted.mainClaim}"`);
-            console.log(`        🔑 Key Person  : ${extracted.keyPerson || 'None'} (${extracted.keyPersonTitle || 'N/A'})`);
-            console.log(`        🔍 Search Query: "${extracted.searchQuery}"`);
+            console.log(`         ✅ Main Claim  : "${extracted.mainClaim}"`);
+            console.log(`         📋 Supporting  : [${extracted.supportingClaims.join(' | ')}]`);
+            console.log(`         🔑 Key Person  : ${extracted.keyPerson || 'None'} (${extracted.keyPersonTitle || 'N/A'})`);
+            console.log(`         🔍 Search Query: "${extracted.searchQuery}"`);
 
             // ─────────────────────────────────────────────────────
-            // 🧠 STEP 3C: PLAUSIBILITY PRE-CHECK
+            // 🚨 HARD OVERRIDE CHECK
             // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 3C] 🧠 Reality Plausibility Pre-Check');
-            plausibility = await checkPlausibility(extracted.mainClaim, detectedCategory);
-            console.log(`        ${plausibility.isPlausible ? '✅' : '🚨'} Plausible: ${plausibility.isPlausible} | Reason: ${plausibility.reason}`);
-
-            // ─────────────────────────────────────────────────────
-            // 🌐 STEP 4: LIVE WEB SEARCH (Using Generated Query directly)
-            // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 4] 🌐 Cross-Referencing Live Web');
-
-            const tavilyRes = await axios.post('https://api.tavily.com/search', {
-                api_key: process.env.TAVILY_API_KEY,
-                query: extracted.searchQuery, // Passed exactly as LLM generated it
-                search_depth: 'basic',
-                include_answer: true,
-                max_results: 5,
-            }, { timeout: 10000 });
-
-            const rawWebAnswer = tavilyRes.data.answer || '';
-            const webResultsCount = tavilyRes.data.results?.length || 0;
-
-            webIsEmpty = !rawWebAnswer || rawWebAnswer.trim().length < 30 || webResultsCount === 0;
-            const webContext = rawWebAnswer || 'No relevant information found online.';
-
-            console.log(`        ✅ Web Search Done | Results: ${webResultsCount} | Context: ${webContext.length} chars | Empty: ${webIsEmpty}`);
-
-            // ─────────────────────────────────────────────────────
-            // ⚖️ STEP 5A: COMPARE CLAIMS VS WEB
-            // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 5A] ⚖️ Comparing Main Claim Against Web Reality');
-            comparisonResult = await compareClaimsVsWeb(
-                extracted.mainClaim,
-                extracted.supportingClaims,
-                webContext,
-                detectedCategory
-            );
-            console.log(`        ✅ Web Match  : ${comparisonResult.webMatchResult}`);
-            console.log(`        📌 Reason     : ${comparisonResult.mainClaimReason}`);
-
-            // ─────────────────────────────────────────────────────
-            // 🚨 STEP 5B: APPLY CATEGORY & GLOBAL PENALTIES
-            // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 5B] 🚨 Applying Reality & Plausibility Checks');
-            let categoryPenalty = getCategoryPenalty(detectedCategory, extracted, webContext);
-
-            if (!plausibility.isPlausible) {
-                categoryPenalty += 20;
-                console.log(`        🚨 PLAUSIBILITY FAIL: "${plausibility.reason}" → penalty -20`);
+            const hardOverride = checkHardOverrides(extracted);
+            if (hardOverride.triggered) {
+                console.log(`\n         🚨 HARD OVERRIDE: ${hardOverride.reason}`);
+                return saveAndReturn(res, {
+                    userId, inputType, inputContent, articleText,
+                    detectedCategory, extracted,
+                    finalScore: 5, finalVerdict: 'FAKE',
+                    groqExplanation: hardOverride.reason,
+                    webMatchResult: 'HARD_OVERRIDE',
+                    contradictionDetail: hardOverride.reason,
+                    nliVerdict, webIsEmpty, mlScore,
+                });
             }
 
-            console.log(`        📉 Total Penalties Applied: -${categoryPenalty} pts`);
+            // ─────────────────────────────────────────────────────
+            // 🧠 STEP 3C: PLAUSIBILITY CHECK
+            // ─────────────────────────────────────────────────────
+            console.log('\n[STEP 3C] 🧠 Plausibility Check');
+            const plausibility = await checkPlausibility(extracted.mainClaim);
+            console.log(`         ${plausibility.isPlausible ? '✅' : '🚨'} Plausible: ${plausibility.isPlausible} | ${plausibility.reason}`);
+
+            if (!plausibility.isPlausible) {
+                console.log(`         🚨 IMPLAUSIBLE → Hard override to FAKE`);
+                return saveAndReturn(res, {
+                    userId, inputType, inputContent, articleText,
+                    detectedCategory, extracted,
+                    finalScore: 10, finalVerdict: 'FAKE',
+                    groqExplanation: `This claim is physically or logically impossible: ${plausibility.reason}`,
+                    webMatchResult: 'IMPLAUSIBLE',
+                    contradictionDetail: plausibility.reason,
+                    nliVerdict, webIsEmpty, mlScore,
+                });
+            }
 
             // ─────────────────────────────────────────────────────
-            // 🔬 STEP 5C: NLI FACT VERIFICATION
+            // 🌐 STEP 4: LIVE WEB SEARCH
             // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 5C] 🔬 NLI Fact Verification');
+            console.log('\n[STEP 4] 🌐 Cross-Referencing Live Web');
             try {
-                const nliPremise = `According to web research: ${webContext}. The article claims: "${extracted.mainClaim}". Do these agree?`;
+                const tavilyRes = await axios.post('https://api.tavily.com/search', {
+                    api_key: process.env.TAVILY_API_KEY,
+                    query: extracted.searchQuery,
+                    search_depth: 'basic',
+                    include_answer: false,
+                    max_results: 5,
+                }, { timeout: 10000 });
 
+                const results = tavilyRes.data.results || [];
+                webResultsCount = results.length;
+                webIsEmpty = webResultsCount === 0;
+
+                webContext = results
+                    .slice(0, 3)
+                    .map(r => `${r.title}: ${(r.content || '').substring(0, 200)}`)
+                    .join(' | ') || 'No relevant information found online.';
+
+                console.log(`         ✅ Web Done | Results: ${webResultsCount} | Chars: ${webContext.length} | Empty: ${webIsEmpty}`);
+                console.log(`         📄 Summary: "${webContext.substring(0, 120)}..."`);
+
+            } catch (tavilyErr) {
+                webApiFailed = true;
+                webIsEmpty = true;
+                webResultsCount = 0;
+                console.log(`         ❌ Web API failed (${tavilyErr.message}) → will use NLI-only fallback`);
+            }
+
+            // ─────────────────────────────────────────────────────
+            // 🔬 STEP 5B: NLI VERIFICATION
+            // ─────────────────────────────────────────────────────
+            console.log('\n[STEP 5B] 🔬 NLI Verification');
+
+            const nliNeeded = webApiFailed ||
+                ['PARTIAL', 'UNKNOWN'].includes(comparisonResult.webMatchResult);
+
+            if (!webApiFailed && !webIsEmpty) {
+                console.log('\n[STEP 5A] ⚖️ Comparing Claim Against Web Reality');
+                comparisonResult = await compareClaimsVsWeb(
+                    extracted.mainClaim,
+                    extracted.supportingClaims,
+                    webContext,
+                    detectedCategory
+                );
+                console.log(`         ✅ Web Match : ${comparisonResult.webMatchResult}`);
+                console.log(`         📌 Reason    : ${comparisonResult.mainClaimReason}`);
+                if (comparisonResult.contradictionFound) {
+                    console.log(`         🚨 Contradiction: ${comparisonResult.contradictionDetail}`);
+                }
+            } else if (!webApiFailed && webIsEmpty) {
+                console.log('\n[STEP 5A] ⚖️ Skipped — web returned 0 results');
+                comparisonResult = { webMatchResult: 'UNKNOWN', mainClaimReason: 'No web results found.', contradictionFound: false, contradictionDetail: null };
+            }
+
+            try {
+                const nliPremise = `Web research says: ${webContext}. The article claims: "${extracted.mainClaim}". Do these agree on timeline, scale, and core facts?`;
                 const nliRes = await axios.post('http://127.0.0.1:8001/nli-verify', {
                     web_context: nliPremise,
-                    main_claim: extracted.mainClaim
+                    main_claim: extracted.mainClaim,
                 }, { timeout: 10000 });
 
                 mlScore = nliRes.data.nli_score ?? 50;
                 nliVerdict = nliRes.data.verdict ?? 'NEUTRAL';
-                console.log(`        ✅ NLI Verdict: ${nliVerdict} (${Math.round(mlScore)}/100)`);
-            } catch (nliErr) {
-                console.log(`        ⚠️ NLI offline → using neutral 50`);
+                console.log(`         ✅ NLI Score  : ${Math.round(mlScore)}/100`);
+                console.log(`         🧠 NLI Verdict: ${nliVerdict}`);
+            } catch {
+                console.log(`         ⚠️ NLI offline → neutral 50`);
+                mlScore = 50;
+                nliVerdict = 'OFFLINE';
             }
 
             // ─────────────────────────────────────────────────────
-            // 🧮 STEP 5D: FIXED MATH SCORING & SIMPLE GUARDRAILS
+            // 🧮 STEP 5C: FINAL SCORE + GUARDRAILS
             // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 5D] 🧮 Calculating Final Score');
+            console.log('\n[STEP 5C] 🧮 Calculating Final Score + Guardrails');
 
-            finalScore = calculateScore({
-                mlScore,
-                webMatchResult: comparisonResult.webMatchResult,
-                categoryPenalty,
-                domainBonus,
-            });
+            if (webApiFailed) {
+                finalScore = Math.round(mlScore);
+                finalVerdict = nliOnlyVerdict(mlScore, nliVerdict);
+                console.log(`         🔄 WEB FAILED MODE: NLI-only verdict → ${finalVerdict}`);
 
-            const nliContrib = Math.round(((mlScore - 50) / 50) * 15);
-            const nliContribActual = (comparisonResult.webMatchResult === 'UNKNOWN' && nliContrib > 0) ? 0 : nliContrib;
-
-            console.log(`        📊 Score Breakdown:`);
-            console.log(`            Base Score            : 50`);
-            console.log(`            Web Match (${comparisonResult.webMatchResult.padEnd(7)}): ${comparisonResult.webMatchResult === 'YES' ? '+40' : comparisonResult.webMatchResult === 'PARTIAL' ? '+10' : comparisonResult.webMatchResult === 'NO' ? '-30' : '  0'}`);
-            console.log(`            NLI Contribution      : ${nliContribActual >= 0 ? '+' : ''}${nliContribActual} (verdict: ${nliVerdict})`);
-            console.log(`            Category Penalty      : -${categoryPenalty}`);
-            console.log(`            Domain Bonus          : +${domainBonus}`);
-            console.log(`            ──────────────────────────`);
-            console.log(`            RAW SCORE             : ${finalScore}/100`);
-
-            // 🛑 THE SIMPLE OVERRIDE LOGIC
-            if (webIsEmpty || comparisonResult.webMatchResult === 'UNKNOWN') {
+            } else if (webIsEmpty || webResultsCount === 0) {
+                finalScore = 40;
                 finalVerdict = 'SUSPICIOUS';
-                console.log(`        🛡️ GUARDRAIL: 0 Web Search Found → Forced SUSPICIOUS`);
-                
-            } else if (mlScore < 20 && comparisonResult.webMatchResult !== 'NO') {
-                finalVerdict = 'SUSPICIOUS';
-                console.log(`        🛡️ GUARDRAIL: NLI is less than 20 → Forced SUSPICIOUS`);
-                
+                console.log(`         🔒 SAFE-ZONE RULE: Web returned 0 results → ALWAYS SUSPICIOUS`);
+
             } else {
-                finalVerdict = scoreToVerdict(finalScore);
+                finalScore = calculateScore({
+                    mlScore,
+                    webMatchResult: comparisonResult.webMatchResult,
+                    domainBonus,
+                });
+
+                const nliContrib = Math.round(((mlScore - 50) / 50) * 8);
+                const nliActual = (comparisonResult.webMatchResult === 'UNKNOWN' && nliContrib > 0) ? 0 : nliContrib;
+
+                console.log(`         📊 Score Breakdown:`);
+                console.log(`            Base Score       : 50`);
+                console.log(`            Web Match        : ${comparisonResult.webMatchResult === 'YES' ? '+40' :
+                        comparisonResult.webMatchResult === 'PARTIAL' ? '+10' :
+                            comparisonResult.webMatchResult === 'NO' ? '-30' : '  0'
+                    } (${comparisonResult.webMatchResult})`);
+                console.log(`            NLI Contribution : ${nliActual >= 0 ? '+' : ''}${nliActual} (${nliVerdict}, max ±8)`);
+                console.log(`            Domain Bonus     : +${domainBonus}`);
+                console.log(`            ─────────────────────────`);
+                console.log(`            RAW SCORE        : ${finalScore}/100`);
+
+                if (comparisonResult.webMatchResult === 'UNKNOWN') {
+                    finalVerdict = finalScore <= 25 ? 'FAKE' : 'SUSPICIOUS';
+                    console.log(`            🛡️ GUARDRAIL 1: Web UNKNOWN (Score: ${finalScore}) → ${finalVerdict}`);
+                } else if (comparisonResult.webMatchResult === 'PARTIAL') {
+                    finalVerdict = finalScore <= 25 ? 'FAKE' : 'SUSPICIOUS';
+                    console.log(`            🛡️ GUARDRAIL 2: Web PARTIAL (Score: ${finalScore}) → ${finalVerdict}`);
+                } else if (comparisonResult.webMatchResult === 'NO') {
+                    finalVerdict = finalScore <= 25 ? 'FAKE' : 'SUSPICIOUS';
+                    console.log(`            🛡️ GUARDRAIL 3: Web NO (Score: ${finalScore}) → ${finalVerdict}`);
+                } else {
+                    finalVerdict = scoreToVerdict(finalScore);
+                    console.log(`            ✅ Web YES → score-based verdict`);
+                }
             }
 
-            console.log(`        🎯 FINAL VERDICT: ${finalVerdict}`);
+            console.log(`            FINAL VERDICT    : ${finalVerdict}`);
 
             // ─────────────────────────────────────────────────────
-            // ✍️ STEP 5E: GENERATE EXPLANATION
+            // ✍️ STEP 5D: GENERATE EXPLANATION
             // ─────────────────────────────────────────────────────
-            console.log('\n[STEP 5E] ✍️ Generating Explanation');
+            console.log('\n[STEP 5D] ✍️ Generating Explanation');
             groqExplanation = await generateExplanation(
-                finalScore,
                 finalVerdict,
                 extracted.mainClaim,
-                comparisonResult.webMatchResult,
+                webApiFailed ? 'WEB_API_FAILED' : comparisonResult.webMatchResult,
                 comparisonResult.contradictionDetail,
                 detectedCategory
             );
-            console.log(`        ✅ Explanation: "${groqExplanation}"`);
+            console.log(`         ✅ "${groqExplanation}"`);
 
             pipelineSucceeded = true;
 
@@ -660,14 +834,23 @@ ${inputContent.substring(0, 1000)}`
                 contradictionDetail: comparisonResult.contradictionDetail || null,
                 nliVerdict,
                 webIsEmpty,
+                webApiFailed,
+                webResultsCount,
                 groqExplanation,
                 pipelineSucceeded,
-            }
+            },
         });
+        console.log(`         ✅ Saved | Record ID: ${record.id}`);
 
         console.log('\n==================================================');
-        console.log('🏁 ANALYSIS COMPLETE — TRUTHGUARD V10.0');
-        console.log(`   ⚖️  Verdict      : ${finalVerdict}`);
+        console.log('🏁 ANALYSIS COMPLETE — TRUTHGUARD V13.0');
+        console.log(`   🏷️  Category : ${CATEGORIES[detectedCategory].emoji} ${CATEGORIES[detectedCategory].name}`);
+        console.log(`   🌐 Web Match : ${comparisonResult.webMatchResult || (webApiFailed ? 'API_FAILED' : 'N/A')}`);
+        console.log(`   📊 Web Count : ${webResultsCount} results`);
+        console.log(`   🔬 NLI       : ${nliVerdict}`);
+        console.log(`   🎯 Score     : ${finalScore} / 100`);
+        console.log(`   ⚖️  Verdict   : ${finalVerdict}`);
+        console.log(`   💡 Reason    : ${groqExplanation}`);
         console.log('==================================================\n');
 
         res.status(201).json({ result: record });
@@ -679,6 +862,9 @@ ${inputContent.substring(0, 1000)}`
     }
 };
 
+// ============================================================
+// 📜 GET HISTORY
+// ============================================================
 const getHistory = async (req, res) => {
     try {
         const records = await Analysis.findAll({

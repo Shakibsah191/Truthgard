@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TruthGuard - AI Powered Fact Checker</title>
+    <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -680,9 +681,6 @@
         </div>
     </footer>
 
-    <!-- ══════════════════════════════════════════
-         PRIVACY POLICY MODAL
-    ══════════════════════════════════════════ -->
     <div id="privacyModal" class="modal-overlay" onclick="handleOverlayClick(event, 'privacyModal')">
         <div class="modal-box">
             <div class="modal-header">
@@ -746,9 +744,6 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         TERMS OF SERVICE MODAL
-    ══════════════════════════════════════════ -->
     <div id="termsModal" class="modal-overlay" onclick="handleOverlayClick(event, 'termsModal')">
         <div class="modal-box">
             <div class="modal-header">
@@ -814,9 +809,6 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         CONTACT MODAL
-    ══════════════════════════════════════════ -->
     <div id="contactModal" class="modal-overlay" onclick="handleOverlayClick(event, 'contactModal')">
         <div class="modal-box">
             <div class="modal-header">
@@ -934,35 +926,181 @@
             }
         }
 
+        // ─── ERROR CARD SYSTEM ────────────────────────────────
+        function showError(buttonId, title, message, type) {
+            document.querySelectorAll('.tg-error-card').forEach(el => el.remove());
+
+            const btn = document.getElementById(buttonId);
+            if (!btn) return;
+
+            const colorMap = {
+                auth: { border: 'rgba(124,58,237,0.45)', bg: 'rgba(124,58,237,0.08)', icon: '#7C3AED', emoji: '🔐' },
+                limit: { border: 'rgba(245,158,11,0.45)', bg: 'rgba(245,158,11,0.08)', icon: '#F59E0B', emoji: '📏' },
+                rate: { border: 'rgba(245,158,11,0.45)', bg: 'rgba(245,158,11,0.08)', icon: '#F59E0B', emoji: '⏳' },
+                server: { border: 'rgba(239,68,68,0.45)', bg: 'rgba(239,68,68,0.08)', icon: '#EF4444', emoji: '⚠️' },
+            };
+            const c = colorMap[type] || colorMap.server;
+
+            const ctaHtml = type === 'auth'
+                ? `<a href="auth.html" style="
+                        display:inline-flex;align-items:center;gap:6px;
+                        margin-top:12px;padding:8px 20px;border-radius:10px;
+                        background:linear-gradient(135deg,#7C3AED,#5B21B6);
+                        color:#fff;font-size:0.82rem;font-weight:700;
+                        text-decoration:none;cursor:pointer;
+                        box-shadow:0 4px 14px rgba(124,58,237,0.35);">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Login / Register
+                    </a>`
+                : type === 'rate'
+                    ? `<button onclick="this.closest('.tg-error-card').remove()" style="
+                        margin-top:12px;padding:7px 18px;border-radius:10px;
+                        border:1px solid ${c.border};background:transparent;
+                        color:${c.icon};font-size:0.82rem;font-weight:600;cursor:pointer;">
+                        Got it, I'll wait
+                    </button>`
+                    : '';
+
+            const card = document.createElement('div');
+            card.className = 'tg-error-card';
+            card.style.cssText = `
+                margin-top:12px;padding:16px 18px;border-radius:14px;
+                border:1px solid ${c.border};background:${c.bg};
+                backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+                display:flex;align-items:flex-start;gap:13px;
+                animation:tgSlideIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
+                position:relative;
+            `;
+
+            card.innerHTML = `
+                <style>
+                    @keyframes tgSlideIn {
+                        from { opacity:0; transform:translateY(-8px) scale(0.97); }
+                        to   { opacity:1; transform:translateY(0) scale(1); }
+                    }
+                </style>
+                <span style="font-size:1.25rem;line-height:1;margin-top:1px;flex-shrink:0;">${c.emoji}</span>
+                <div style="flex:1;min-width:0;">
+                    <p style="margin:0 0 3px;font-weight:700;font-size:0.875rem;color:${c.icon};">${title}</p>
+                    <p style="margin:0;font-size:0.82rem;line-height:1.55;color:#9ca3af;">${message}</p>
+                    ${ctaHtml}
+                </div>
+                <button onclick="this.closest('.tg-error-card').remove()" style="
+                    flex-shrink:0;width:22px;height:22px;border-radius:50%;
+                    border:1px solid ${c.border};background:transparent;
+                    color:${c.icon};cursor:pointer;font-size:12px;
+                    display:flex;align-items:center;justify-content:center;opacity:0.7;">✕</button>
+            `;
+
+            if (type !== 'auth') {
+                setTimeout(() => {
+                    if (card.parentNode) {
+                        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(-6px)';
+                        setTimeout(() => card.remove(), 400);
+                    }
+                }, 8000);
+            }
+
+            btn.parentNode.insertBefore(card, btn.nextSibling);
+        }
+
+        // ─── HELPER: check login ──────────────────────────────
+        function requireLogin(buttonId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showError(buttonId,
+                    'Login Required',
+                    'You need to be logged in to use this feature. Create a free account to get started.',
+                    'auth'
+                );
+                return false;
+            }
+            return true;
+        }
+
+        // ─── HELPER: parse backend error ──────────────────────
+        function parseBackendError(status, data, defaultMsg) {
+            if (status === 401 || status === 403) {
+                return { type: 'auth', title: 'Session Expired', msg: 'Your session has expired. Please log in again to continue.' };
+            }
+            if (status === 400) {
+                const m = data?.message || '';
+                if (m.toLowerCase().includes('too long') || m.toLowerCase().includes('word limit') || m.toLowerCase().includes('exceeds')) {
+                    return { type: 'limit', title: 'Content Too Long', msg: m || 'Your text exceeds the word limit. Please shorten it and try again.' };
+                }
+                if (m.toLowerCase().includes('too short')) {
+                    return { type: 'limit', title: 'Content Too Short', msg: 'Please provide more text — at least a few sentences — for a reliable analysis.' };
+                }
+                return { type: 'limit', title: 'Invalid Input', msg: m || defaultMsg };
+            }
+            if (status === 429) {
+                return { type: 'rate', title: 'Too Many Requests', msg: 'Our AI service is busy right now. Please wait 30 seconds and try again.' };
+            }
+            if (status >= 500) {
+                return { type: 'server', title: 'Server Error', msg: 'Something went wrong on our end. Please try again in a moment.' };
+            }
+            return { type: 'server', title: 'Error', msg: defaultMsg };
+        }
+
         // ─── CORE ANALYZE (URL & TEXT) ─────────────────────────
         async function analyze(type) {
-            let inputElement, btnElement, originalContent;
+            let inputElement, btnElement, buttonId;
             if (type === 'url') {
                 inputElement = document.getElementById('urlInput');
                 btnElement = document.getElementById('btnUrl');
-                if (!inputElement.value.trim()) { alert('Please enter a valid URL.'); return; }
+                buttonId = 'btnUrl';
+                if (!inputElement.value.trim()) {
+                    showError(buttonId, 'No URL Entered', 'Please paste a valid news article URL to analyze.', 'limit');
+                    return;
+                }
             } else {
                 inputElement = document.getElementById('textInput');
                 btnElement = document.getElementById('btnText');
-                if (!inputElement.value.trim()) { alert('Please paste some text to analyze.'); return; }
+                buttonId = 'btnText';
+                if (!inputElement.value.trim()) {
+                    showError(buttonId, 'No Text Entered', 'Please paste the article text you want to analyze.', 'limit');
+                    return;
+                }
             }
-            originalContent = btnElement.innerHTML;
-            btnElement.innerHTML = `<span>Analyzing...</span>`;
+
+            if (!requireLogin(buttonId)) return;
+
+            document.querySelectorAll('.tg-error-card').forEach(el => el.remove());
+
+            const originalContent = btnElement.innerHTML;
+            btnElement.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Analyzing...</span>`;
             btnElement.disabled = true;
+
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('http://localhost:5000/api/analyze', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ inputType: type, inputContent: inputElement.value })
                 });
-                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+
                 const data = await response.json();
+
+                if (!response.ok) {
+                    const err = parseBackendError(response.status, data, 'Analysis failed. Please try again.');
+                    showError(buttonId, err.title, err.msg, err.type);
+                    return;
+                }
+
                 localStorage.setItem('truthguard_result', JSON.stringify(data.result));
                 inputElement.value = '';
                 window.location.href = 'results.html';
+
             } catch (error) {
-                alert('An error occurred during analysis.');
+                showError(buttonId,
+                    'Connection Failed',
+                    'Could not reach the server. Please check your internet connection and try again.',
+                    'server'
+                );
             } finally {
                 btnElement.innerHTML = originalContent;
                 btnElement.disabled = false;
@@ -973,24 +1111,47 @@
         async function analyzeEmotion() {
             const inputElement = document.getElementById('emotionInput');
             const btnElement = document.getElementById('btnEmotion');
-            if (!inputElement.value.trim()) { alert('Please paste some text to detect emotion.'); return; }
+            const buttonId = 'btnEmotion';
+
+            if (!inputElement.value.trim()) {
+                showError(buttonId, 'No Text Entered', 'Please paste some text to detect its emotional tone.', 'limit');
+                return;
+            }
+
+            if (!requireLogin(buttonId)) return;
+
+            document.querySelectorAll('.tg-error-card').forEach(el => el.remove());
+
             const originalContent = btnElement.innerHTML;
-            btnElement.innerHTML = `<span>Detecting...</span>`;
+            btnElement.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Detecting...</span>`;
             btnElement.disabled = true;
+
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('http://localhost:5000/api/analyze/emotion', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ text: inputElement.value })
                 });
-                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+
                 const data = await response.json();
+
+                if (!response.ok) {
+                    const err = parseBackendError(response.status, data, 'Emotion detection failed. Please try again.');
+                    showError(buttonId, err.title, err.msg, err.type);
+                    return;
+                }
+
                 localStorage.setItem('truthguard_emotion_result', JSON.stringify(data));
                 inputElement.value = '';
                 window.location.href = 'emotion.html';
+
             } catch (error) {
-                alert('An error occurred while detecting emotion.');
+                showError(buttonId,
+                    'Connection Failed',
+                    'Could not reach the server. Please check your internet connection and try again.',
+                    'server'
+                );
             } finally {
                 btnElement.innerHTML = originalContent;
                 btnElement.disabled = false;
@@ -1001,31 +1162,62 @@
         async function analyzeClaims() {
             const inputElement = document.getElementById('claimsInput');
             const btnElement = document.getElementById('btnClaims');
-            if (!inputElement.value.trim()) { alert('Please paste some text to extract claims.'); return; }
+            const buttonId = 'btnClaims';
+
+            if (!inputElement.value.trim()) {
+                showError(buttonId, 'No Text Entered', 'Please paste an article to extract its key claims.', 'limit');
+                return;
+            }
+
+            if (!requireLogin(buttonId)) return;
+
+            document.querySelectorAll('.tg-error-card').forEach(el => el.remove());
+
             const originalContent = btnElement.innerHTML;
-            btnElement.innerHTML = `<span>Extracting...</span>`;
+            btnElement.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Extracting...</span>`;
             btnElement.disabled = true;
+
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('http://localhost:5000/api/analyze/claims', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ text: inputElement.value })
                 });
-                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
+
                 const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 429 || (data?.message || '').toLowerCase().includes('rate')) {
+                        showError(buttonId,
+                            'AI Busy — Please Wait',
+                            'The claim extraction AI is processing too many requests. Wait 30 seconds and try again.',
+                            'rate'
+                        );
+                        return;
+                    }
+                    const err = parseBackendError(response.status, data, 'Claim extraction failed. Please try again.');
+                    showError(buttonId, err.title, err.msg, err.type);
+                    return;
+                }
+
                 localStorage.setItem('truthguard_claims_result', JSON.stringify(data.claims));
                 inputElement.value = '';
                 window.location.href = 'claims.html';
+
             } catch (error) {
-                alert('An error occurred while extracting claims.');
+                showError(buttonId,
+                    'Connection Failed',
+                    'Could not reach the server. Please check your internet connection and try again.',
+                    'server'
+                );
             } finally {
                 btnElement.innerHTML = originalContent;
                 btnElement.disabled = false;
             }
         }
 
-        // ─── AUTH UI ──────────────────────────────────────────────
+        // ─── AUTH UI ──────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             const userString = localStorage.getItem('user');
@@ -1033,12 +1225,12 @@
             if (token && userString && authSection) {
                 const user = JSON.parse(userString);
                 const firstName = user.name.split(' ')[0];
-               authSection.outerHTML = `
+                authSection.outerHTML = `
     <div class="flex items-center space-x-3">
         <span class="text-gray-800 dark:text-gray-200 font-medium text-sm">Hi, ${firstName}</span>
         <a href="profile.html" class="flex items-center space-x-1.5 px-4 py-2 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 transition-colors text-sm font-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span>My profile</span>
         </a>
@@ -1046,12 +1238,14 @@
     </div>`;
             }
         });
+
         function logoutUser() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.reload();
         }
     </script>
+
 </body>
 
 </html>

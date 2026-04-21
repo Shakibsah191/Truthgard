@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // ✅ Use the current controller (not the backup)
-const { analyze, getHistory } = require('../controllers/analyzeController-last.js.bak');
+const { analyze, getHistory } = require('../controllers/analyzeController.js');
 
 const { detectEmotion } = require('../controllers/emotionController');
 const { extractClaims } = require('../controllers/claimsController');

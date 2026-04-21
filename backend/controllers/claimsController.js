@@ -16,39 +16,57 @@ const extractClaims = async (req, res) => {
         // --- WORD LIMIT CHECK ---
         const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         if (wordCount > 3000) {
-            console.log(`[Claims Controller] 🚫 Blocked request: Text too long (${wordCount} words)`);
+            console.log(`[Claims Controller] 🚫 Blocked: Text too long (${wordCount} words)`);
             return res.status(400).json({ 
                 message: `Content exceeds the 3,000 word limit. You submitted ${wordCount} words.` 
             });
         }
-        // ------------------------
 
-        console.log('\n[Claims Controller] 🔍 Extracting claims via Groq...');
+        // Decide claim count range based on article length
+        let minClaims, maxClaims;
+        if (wordCount < 80) {
+            minClaims = 1; maxClaims = 2;
+        } else if (wordCount < 200) {
+            minClaims = 1; maxClaims = 3;
+        } else if (wordCount < 600) {
+            minClaims = 2; maxClaims = 4;
+        } else {
+            minClaims = 3; maxClaims = 5;
+        }
 
-        // 🎯 THE FIX: Updated Prompt to enforce Bengali output for text, but English for JSON keys/logic
+        console.log(`\n[Claims Controller] 🔍 Extracting claims (${wordCount} words → expect ${minClaims}–${maxClaims} claims)...`);
+
         const claimsPrompt = `
 You are a forensic claim extractor for a Bangladeshi fact-checking platform.
-Read the article below and extract exactly 2 to 3 main factual claims that can be independently verified.
+Read the article below and extract the most important verifiable factual claims.
 
-CRITICAL INSTRUCTIONS: 
-1. You MUST write the "summary", "claim_text", and "why_important" fields in BENGALI (বাংলা).
-2. The JSON keys and the exact words for "claim_type" and "confidence" MUST remain in English so the system can parse them.
+CRITICAL INSTRUCTIONS:
+1. Extract ONLY genuinely distinct, checkable factual claims. Do NOT pad or invent claims.
+2. If the article only has ${minClaims === 1 ? 'one clear claim' : 'a few clear claims'}, extract only that many. Do not force extra claims.
+3. Extract between ${minClaims} and ${maxClaims} claims based on what the article actually contains.
+4. You MUST write "summary", "claim_text", and "why_important" in BENGALI (বাংলা).
+5. JSON keys, "claim_type" values, and "confidence" values MUST stay in English.
 
-Each claim must be:
-- A single, self-contained factual statement
-- Specific (contains names, numbers, dates, or events)
-- Verifiable (a journalist could check it)
+A valid claim must be:
+- A single self-contained factual statement
+- Specific (has a name, number, date, place, or event)
+- Something a journalist could independently verify
 
-You MUST respond ONLY in this exact JSON format. No other text outside the JSON.
+A claim is NOT valid if it is:
+- Vague or general (e.g. "The situation is bad")
+- An opinion or prediction
+- A repeat of another claim already listed
+
+Respond ONLY with this exact JSON. No text before or after.
 
 {
-  "summary": "[Write a 2-3 sentence overall assessment of the text here in BENGALI]",
+  "summary": "[2-3 sentence overall assessment in BENGALI]",
   "claims": [
     {
-      "claim_text": "[The exact claim in one sentence here in BENGALI]",
+      "claim_text": "[The exact claim in one sentence in BENGALI]",
       "claim_type": "statistic | event | quote | accusation | policy",
       "confidence": "high | medium | low",
-      "why_important": "[One sentence on why this claim matters to the story here in BENGALI]"
+      "why_important": "[One sentence on why this matters in BENGALI]"
     }
   ]
 }
@@ -60,7 +78,7 @@ ${text}
         const groqRes = await groq.chat.completions.create({
             model: 'llama-3.1-8b-instant',
             messages: [{ role: 'user', content: claimsPrompt }],
-            temperature: 0.1
+            temperature: 0.2
         });
 
         const raw = groqRes.choices[0]?.message?.content?.trim();
