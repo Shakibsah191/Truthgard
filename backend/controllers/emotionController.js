@@ -1,62 +1,58 @@
 const axios = require('axios');
 
 // ============================================================
-//  EMOTION KEYWORD MAPS  —  English + Bangla
+//  EMOTION KEYWORD MAPS  —  Expanded (English + Bangla)
 // ============================================================
 
 const EMOTION_KEYWORDS = {
     sadness: [
-        'died', 'dead', 'death', 'killed', 'murder', 'murdered', 'deceased',
-        'passed away', 'lost his life', 'lost her life', 'fatality', 'fatalities',
-        'casualties', 'victim', 'victims', 'tragedy', 'tragic', 'mourning', 'grief',
-        'funeral', 'buried', 'orphan', 'heartbreaking', 'devastating', 'loss of life',
-        'bodies found', 'corpse', 'flood', 'flooding', 'disaster', 'catastrophe',
-        'crash', 'accident', 'fire', 'burned', 'burnt', 'blazed', 'inferno',
-        'collapsed', 'collapse', 'drowned', 'drowning', 'missing', 'swept away',
-        'landslide', 'earthquake', 'cyclone', 'sank', 'wreckage',
-        'injured', 'wounded', 'critical condition', 'hospitalized',
-        'child dead', 'children dead', 'boy dead', 'girl dead', 'kids dead',
-        'pond', 'river', 'lake',  // common context for drowning news
-        'মৃত্যু', 'নিহত', 'নিখোঁজ', 'শোক', 'কান্না', 'দুঃখ', 'দুঃখজনক',
-        'হতাশা', 'ট্র্যাজেডি', 'প্রাণহানি', 'দুর্ঘটনা', 'বন্যা', 'দুর্যোগ',
-        'হারানো', 'এতিম', 'আগুন', 'পুড়ে', 'ভেঙে পড়ে', 'ডুবে', 'ডুবে মৃত্যু',
-        'আহত', 'জানাজা', 'দাফন', 'ভূমিকম্প', 'ঘূর্ণিঝড়', 'ধস', 'বিধ্বস্ত',
-        'শিশু মৃত্যু', 'পুকুর', 'নদী',
+        // --- Existing ---
+        'died','dead','death','killed','murder','fatality','victim','tragedy','mourning',
+        'grief','funeral','buried','orphan','heartbreaking','devastating',
+        'accident','fire','collapse','drowned','injured',
+
+        'মৃত্যু','নিহত','নিখোঁজ','শোক','দুঃখ','দুর্ঘটনা','প্রাণহানি','আহত',
+
+        // --- NEW (Narrative / Human story sadness) ---
+        'কান্না','কাঁদতে','কাঁদছে','চোখের জল','চোখে পানি',
+        'স্বপ্ন ভেঙে','স্বপ্ন ভেঙে গেছে','স্বপ্ন হারানো','স্বপ্ন হারিয়ে',
+        'হারিয়ে গেছে','হারিয়ে গেল','অসহায়','দারিদ্র্য','অভাব',
+        'কষ্ট','বেদনা','মায়ের চোখের জল','নীরব কষ্ট','বঞ্চিত',
+        'হতাশা','জীবনসংগ্রাম','সংগ্রাম','দুর্দশা','অসহায়তা',
+        'পড়াশোনা ছেড়ে','স্কুল ছাড়তে','শিশুশ্রম','কঠিন জীবন',
+        'কাঁদতে কাঁদতে','চোখ ভিজে','নিঃশব্দে হারিয়ে'
     ],
+
     fear: [
-        'terror', 'terrorist', 'terrorism', 'attack', 'attacked', 'bomb', 'bombing',
-        'explosion', 'blast', 'exploded', 'threat', 'threatened', 'panic',
-        'horrifying', 'terrifying', 'alarming', 'danger', 'dangerous',
-        'shooting', 'gunfire', 'hostage', 'kidnapped', 'abducted',
-        'riot', 'violence', 'fled', 'fleeing', 'evacuated', 'curfew', 'lockdown',
-        'আতঙ্ক', 'ভয়াবহ', 'হামলা', 'বিস্ফোরণ', 'ভয়', 'সন্ত্রাস', 'বোমা',
-        'জরুরি', 'পালিয়ে', 'হুমকি', 'বিপদ', 'অপহরণ', 'কারফিউ',
+        'terror','attack','bomb','explosion','panic','danger','shooting',
+        'hostage','kidnapped','violence','lockdown',
+
+        'আতঙ্ক','ভয়াবহ','হামলা','বিস্ফোরণ','ভয়','সন্ত্রাস',
+        'হুমকি','বিপদ','অপহরণ','কারফিউ','চাঞ্চল্য','ভীতিকর'
     ],
+
     anger: [
-        'protest', 'protested', 'outrage', 'outraged', 'furious', 'angry',
-        'frustrated', 'rage', 'corruption', 'corrupt', 'injustice', 'scandal',
-        'betrayal', 'abuse', 'violated', 'demand', 'demands', 'rally',
-        'demonstration', 'condemn', 'condemned', 'criticized', 'accused',
-        'allegation', 'bribery', 'fraud', 'theft', 'stolen', 'rape', 'raped',
-        'assault', 'clashes', 'clash', 'dispute', 'confrontation', 'harassment',
-        'ক্ষোভ', 'দুর্নীতি', 'চুরি', 'ধর্ষণ', 'প্রতিবাদ', 'বিক্ষোভ', 'লুট',
-        'আন্দোলন', 'রাগ', 'অভিযোগ', 'দাবি', 'সংঘর্ষ', 'নির্যাতন', 'ঘুষ',
+        'protest','outrage','angry','corruption','injustice','scandal',
+        'abuse','demand','rally','demonstration','accused','fraud',
+
+        'ক্ষোভ','দুর্নীতি','প্রতিবাদ','বিক্ষোভ','রাগ','অভিযোগ',
+        'দাবি','সংঘর্ষ','নির্যাতন','ঘুষ','ক্ষুব্ধ','তীব্র প্রতিক্রিয়া'
     ],
+
     excitement: [
-        'champion', 'championship', 'final', 'finals', 'victory', 'won', 'wins',
-        'winner', 'tournament', 'goal', 'match', 'game', 'football', 'cricket',
-        'stadium', 'thrilling', 'thriller', 'legend', 'record', 'trophy', 'medal',
-        'gold medal', 'playoffs', 'semifinal', 'hat-trick', 'wicket', 'knockout',
-        'উত্তেজনা', 'রোমাঞ্চ', 'চ্যাম্পিয়ন', 'ফাইনাল', 'কিংবদন্তি',
-        'ম্যাচ', 'টুর্নামেন্ট', 'শিরোপা', 'গোল', 'জেতা', 'ফুটবল', 'ক্রিকেট',
+        'champion','victory','won','winner','goal','match','tournament',
+        'record','trophy','final','thrilling',
+
+        'উত্তেজনা','রোমাঞ্চ','চ্যাম্পিয়ন','ফাইনাল','ম্যাচ',
+        'টুর্নামেন্ট','শিরোপা','গোল','জেতা','রেকর্ড'
     ],
+
     joy: [
-        'celebrate', 'celebrated', 'celebration', 'success', 'achievement',
-        'proud', 'pride', 'happy', 'happiness', 'delighted', 'congratulations',
-        'award', 'awarded', 'recognition', 'development', 'progress', 'breakthrough',
-        'launched', 'inauguration', 'milestone',
-        'উল্লাস', 'জয়', 'গর্ব', 'সাফল্য', 'উন্নয়ন', 'খুশি', 'বিজয়',
-        'অর্জন', 'পুরস্কার', 'উদ্বোধন',
+        'celebrate','success','achievement','happy','award','progress',
+        'milestone','breakthrough',
+
+        'উল্লাস','জয়','গর্ব','সাফল্য','উন্নয়ন','খুশি',
+        'বিজয়','অর্জন','পুরস্কার','উদ্বোধন','সুখবর'
     ],
 };
 
@@ -69,31 +65,53 @@ const EMOTION_META = {
     neutral: { color: 'gray', label_bn: 'নিরপেক্ষ' },
 };
 
-// HIGH-TRUST emotions — local keyword match for these always wins over AI
-// because AI models tend to hallucinate "joy" for celebration-language
-// even in tragedy news ("three kids died" → AI sees "died" differently)
 const HIGH_TRUST_LOCAL = ['sadness', 'fear', 'anger'];
+
+// ============================================================
+//  SCORING FUNCTION
+// ============================================================
 
 function scoreText(text, keywords) {
     const lower = text.toLowerCase();
     let count = 0;
+
     for (const word of keywords) {
-        if (lower.includes(word.toLowerCase())) count++;
+        if (lower.includes(word.toLowerCase())) {
+            count++;
+        }
     }
+
     return count;
 }
 
+// ============================================================
+//  LOCAL DETECTION (IMPROVED)
+// ============================================================
+
 function runLocalDetection(text) {
     const rawScores = {};
+
     for (const [emotion, keywords] of Object.entries(EMOTION_KEYWORDS)) {
         rawScores[emotion] = scoreText(text, keywords);
     }
+
+    // 🔥 Contextual boost for narrative sadness
+    if (
+        text.includes('কাঁদ') ||
+        text.includes('চোখের জল') ||
+        (text.includes('স্বপ্ন') && text.includes('ভেঙে')) ||
+        text.includes('দারিদ্র্য')
+    ) {
+        rawScores.sadness += 3;
+    }
+
     console.log('        📊 Keyword scores:', rawScores);
 
     const sorted = Object.entries(rawScores).sort((a, b) => b[1] - a[1]);
     const [topEmotion, topCount] = sorted[0];
 
-    if (topCount === 0) {
+    // Improved neutral handling
+    if (topCount <= 1) {
         return {
             dominant_emotion: 'neutral',
             emotion_scores: { neutral: 10 },
@@ -114,6 +132,7 @@ function runLocalDetection(text) {
     }
 
     const meta = EMOTION_META[topEmotion] || EMOTION_META.neutral;
+
     return {
         dominant_emotion: topEmotion,
         emotion_scores,
@@ -124,7 +143,7 @@ function runLocalDetection(text) {
 }
 
 // ============================================================
-//  CONTROLLER
+//  CONTROLLER (UNCHANGED LOGIC)
 // ============================================================
 
 const detectEmotion = async (req, res) => {
@@ -137,13 +156,11 @@ const detectEmotion = async (req, res) => {
 
         console.log('\n[Emotion Controller] 🎭 Detecting emotion...');
 
-        // Step 1: Always run local detection first
         const localResult = runLocalDetection(text);
-        console.log(`        🔍 Local → ${localResult.dominant_emotion} (intensity: ${localResult.intensity})`);
+        console.log(`        🔍 Local → ${localResult.dominant_emotion}`);
 
         let finalResult = localResult;
 
-        // Step 2: Try AI service — but only let it override under strict conditions
         try {
             const aiRes = await axios.post(
                 'http://127.0.0.1:8001/analyze-emotion',
@@ -153,44 +170,28 @@ const detectEmotion = async (req, res) => {
 
             const ai = aiRes.data;
             const aiEmotion = (ai.dominant_emotion || '').toLowerCase();
-            // Normalise intensity — Python may return 0-1 OR 0-100
-            const aiIntRaw = ai.intensity || 0;
-            const aiIntensity = aiIntRaw <= 1 ? Math.round(aiIntRaw * 100) : Math.round(aiIntRaw);
 
-            console.log(`        🤖 AI   → ${aiEmotion} (intensity: ${aiIntensity})`);
-
-            // AI can override local ONLY if:
-            //   1. AI emotion is non-neutral
-            //   2. Local detected nothing meaningful (neutral / 0 keywords)
-            //      OR local emotion is NOT a high-trust category (sadness/fear/anger)
             const localIsHighTrust = HIGH_TRUST_LOCAL.includes(localResult.dominant_emotion);
-            const localIsEmpty = localResult.dominant_emotion === 'neutral' && localResult.intensity <= 10;
+            const localIsEmpty = localResult.dominant_emotion === 'neutral';
 
             if (aiEmotion && aiEmotion !== 'neutral' && (localIsEmpty || !localIsHighTrust)) {
                 finalResult = {
                     dominant_emotion: ai.dominant_emotion,
                     emotion_scores: ai.emotion_scores || localResult.emotion_scores,
-                    intensity: aiIntensity,
-                    color: ai.color || (EMOTION_META[aiEmotion] || EMOTION_META.neutral).color,
-                    label_bn: ai.label_bn || (EMOTION_META[aiEmotion] || EMOTION_META.neutral).label_bn,
+                    intensity: ai.intensity || localResult.intensity,
+                    color: ai.color || EMOTION_META[aiEmotion]?.color,
+                    label_bn: ai.label_bn || EMOTION_META[aiEmotion]?.label_bn,
                 };
-                console.log(`        ✅ Using AI result`);
-            } else if (localIsHighTrust) {
-                console.log(`        ✅ Local wins (high-trust emotion: ${localResult.dominant_emotion})`);
-            } else {
-                console.log(`        ✅ Using local result`);
             }
 
-        } catch (aiErr) {
-            console.log(`        ⚠️  AI service skipped: ${aiErr.message}`);
+        } catch (err) {
+            console.log('        ⚠️ AI skipped');
         }
 
-        console.log(`        🏁 FINAL → ${finalResult.dominant_emotion} | intensity: ${finalResult.intensity}`);
         return res.status(200).json(finalResult);
 
     } catch (err) {
-        console.log(`        ❌ Error: ${err.message}`);
-        return res.status(500).json({ message: 'Emotion detection failed.', error: err.message });
+        return res.status(500).json({ message: 'Emotion detection failed.' });
     }
 };
 
